@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { Send, Shield, Zap, XCircle, KeyRound, HelpCircle, AlertCircle } from 'lucide-react';
+import { Send, Shield, Zap, XCircle, KeyRound, HelpCircle, AlertCircle, CheckCircle2, Lock } from 'lucide-react';
 import { Room, Player } from '../types/game';
 import { Timer } from './Timer';
 
 interface ActionPanelProps {
   room: Room;
   currentUser: Player;
-  onAskQuestion: (text: string) => Promise<void>;
+  onAskQuestion: (text: string, intendedWord: string) => Promise<void>;
   onCancelQuestion: () => Promise<void>;
   onDeclareContact: () => Promise<void>;
-  onDeflect: (word: string) => Promise<{ success: boolean; error?: string }>;
+  onDeflect: (word: string) => Promise<{ success: boolean; matched: boolean; error?: string }>;
+  onAcceptDeflect: () => Promise<void>;
   onTimerExpired: () => void;
   onOpenDirectGuess: () => void;
 }
@@ -21,12 +22,16 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   onCancelQuestion,
   onDeclareContact,
   onDeflect,
+  onAcceptDeflect,
   onTimerExpired,
   onOpenDirectGuess,
 }) => {
   const [questionText, setQuestionText] = useState('');
+  const [intendedWord, setIntendedWord] = useState('');
+  const [askError, setAskError] = useState<string | null>(null);
+
   const [deflectWord, setDeflectWord] = useState('');
-  const [deflectError, setDeflectError] = useState<string | null>(null);
+  const [deflectFeedback, setDeflectFeedback] = useState<{ message: string; isError: boolean } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isHost = currentUser.role === 'host';
@@ -38,14 +43,16 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   // Submit question handler
   const handleAskSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!questionText.trim() || isSubmitting) return;
+    if (!questionText.trim() || !intendedWord.trim() || isSubmitting) return;
 
+    setAskError(null);
     try {
       setIsSubmitting(true);
-      await onAskQuestion(questionText);
+      await onAskQuestion(questionText, intendedWord);
       setQuestionText('');
+      setIntendedWord('');
     } catch (err: unknown) {
-      console.error(err);
+      setAskError(err instanceof Error ? err.message : 'Ошибка при отправке вопроса');
     } finally {
       setIsSubmitting(false);
     }
@@ -56,17 +63,25 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
     e.preventDefault();
     if (!deflectWord.trim() || isSubmitting) return;
 
-    setDeflectError(null);
+    setDeflectFeedback(null);
     try {
       setIsSubmitting(true);
       const res = await onDeflect(deflectWord);
-      if (res.success) {
+      if (res.matched) {
         setDeflectWord('');
-      } else if (res.error) {
-        setDeflectError(res.error);
+        setDeflectFeedback(null);
+      } else {
+        setDeflectFeedback({
+          message: res.error || `Не угадали! Это не «${deflectWord.toUpperCase()}». Пробуйте ещё!`,
+          isError: true,
+        });
+        setDeflectWord('');
       }
     } catch (err: unknown) {
-      setDeflectError(err instanceof Error ? err.message : 'Ошибка при отбитии');
+      setDeflectFeedback({
+        message: err instanceof Error ? err.message : 'Ошибка при отбитии',
+        isError: true,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -97,8 +112,9 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                     Вопрос от {room.currentQuestion!.authorName}
                   </span>
                   {isQuestionAuthor && (
-                    <span className="text-[10px] bg-indigo-900/60 text-indigo-200 px-2 py-0.5 rounded-full border border-indigo-700/50">
-                      Ваш вопрос
+                    <span className="text-[10px] bg-indigo-900/60 text-indigo-200 px-2 py-0.5 rounded-full border border-indigo-700/50 flex items-center gap-1">
+                      <Lock className="w-2.5 h-2.5" />
+                      Загадано: «{room.currentQuestion!.intendedWord}»
                     </span>
                   )}
                 </div>
@@ -125,8 +141,32 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
             <div className="mt-3 pt-3 border-t border-slate-800 text-xs text-amber-300 flex items-center gap-2">
               <Zap className="w-4 h-4 text-amber-400 animate-bounce" />
               <span>
-                <strong>{room.contactData?.partnerName}</strong> крикнул Контакт! Ждем ответа ведущего...
+                <strong>{room.contactData?.partnerName}</strong> крикнул Контакт! Ведущий пытается отгадать...
               </span>
+            </div>
+          )}
+
+          {/* Host recent attempt & Author confirmation button */}
+          {room.lastDeflectAttempt && (
+            <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div className="text-amber-300/90 flex items-center gap-1.5">
+                <span>Последняя догадка ведущего:</span>
+                <strong className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-700">
+                  «{room.lastDeflectAttempt.word}»
+                </strong>
+                <span className="text-slate-400">(не совпало)</span>
+              </div>
+
+              {/* Author can accept if host named a synonym/valid interpretation */}
+              {isQuestionAuthor && (
+                <button
+                  onClick={() => onAcceptDeflect()}
+                  className="self-start sm:self-auto px-3 py-1 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-600/40 text-xs font-medium flex items-center gap-1.5 transition-colors"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Слово подходит (засчитать отбитие)</span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -136,13 +176,13 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       {isHost ? (
         /* HOST VIEW */
         <div className="glass-panel rounded-2xl p-5 sm:p-6 border border-amber-500/30">
-          <div className="flex items-center gap-2.5 mb-3">
+          <div className="flex items-center gap-2.5 mb-2">
             <Shield className="w-5 h-5 text-amber-400" />
             <h3 className="font-bold text-base text-white">Панель ведущего: Отбитие («Это не...»)</h3>
           </div>
 
           <p className="text-xs text-slate-300 mb-4">
-            Если вы поняли, какое слово имел в виду игрок, введите его ниже, чтобы сбросить вопрос и не дать открыть букву.
+            Отгадайте, какое слово имел в виду игрок. Если не угадаете — таймер продолжит идти!
             Слово обязано начинаться на:{' '}
             <strong className="text-amber-300 font-mono text-sm">{revealedPrefix}...</strong>
           </p>
@@ -157,7 +197,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                 value={deflectWord}
                 onChange={(e) => {
                   setDeflectWord(e.target.value);
-                  setDeflectError(null);
+                  setDeflectFeedback(null);
                 }}
                 disabled={!hasActiveQuestion}
                 placeholder={hasActiveQuestion ? `${revealedPrefix}...` : 'Ждите намёка игроков'}
@@ -175,10 +215,10 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
             </button>
           </form>
 
-          {deflectError && (
-            <div className="mt-2 text-xs text-rose-400 flex items-center gap-1.5">
-              <AlertCircle className="w-3.5 h-3.5" />
-              <span>{deflectError}</span>
+          {deflectFeedback && (
+            <div className="mt-2.5 text-xs text-amber-300 bg-amber-950/40 p-2.5 rounded-xl border border-amber-800/40 flex items-center gap-1.5 animate-fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+              <span>{deflectFeedback.message}</span>
             </div>
           )}
         </div>
@@ -198,33 +238,71 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
 
           {/* Form to ask question (when no active question) */}
           {!hasActiveQuestion && (
-            <div className="glass-panel rounded-2xl p-5 border border-slate-800">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="glass-panel rounded-2xl p-5 sm:p-6 border border-slate-800">
+              <div className="flex items-center gap-2 mb-1">
                 <HelpCircle className="w-4 h-4 text-indigo-400" />
                 <h4 className="font-semibold text-sm text-slate-200">
                   Задайте намёк на слово (начинается на «{revealedPrefix}...»)
                 </h4>
               </div>
-              <p className="text-xs text-slate-400 mb-3">
+              <p className="text-xs text-slate-400 mb-4">
                 Придумайте ассоциацию, которую поймет хотя бы один другой игрок, но не догадается ведущий.
               </p>
 
-              <form onSubmit={handleAskSubmit} className="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="text"
-                  value={questionText}
-                  onChange={(e) => setQuestionText(e.target.value)}
-                  placeholder="Это не то, чем копают землю?.."
-                  className="flex-1 px-4 py-3 rounded-xl bg-slate-900/90 text-white placeholder-slate-500 border border-slate-700/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-                />
-                <button
-                  type="submit"
-                  disabled={!questionText.trim() || isSubmitting}
-                  className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>Задать</span>
-                </button>
+              <form onSubmit={handleAskSubmit} className="flex flex-col gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    1. Ваш намёк / вопрос для всех
+                  </label>
+                  <input
+                    type="text"
+                    value={questionText}
+                    onChange={(e) => {
+                      setQuestionText(e.target.value);
+                      setAskError(null);
+                    }}
+                    placeholder="Например: Это не то, чем копают землю?.."
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900/90 text-white placeholder-slate-500 border border-slate-700/80 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-amber-400" />
+                    <span>2. Какое слово вы загадали? (секретно, начинается на «{revealedPrefix}...»)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={intendedWord}
+                    onChange={(e) => {
+                      setIntendedWord(e.target.value.toUpperCase());
+                      setAskError(null);
+                    }}
+                    placeholder={`Например: ${revealedPrefix}ОПАТА`}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900/90 text-amber-300 placeholder-slate-600 border border-slate-700/80 focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold uppercase tracking-wider text-sm font-mono"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Слово скрыто от ведущего. Ведущий должен назвать именно его, чтобы отбить вопрос!
+                  </p>
+                </div>
+
+                {askError && (
+                  <div className="text-xs text-rose-400 flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{askError}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-end mt-1">
+                  <button
+                    type="submit"
+                    disabled={!questionText.trim() || !intendedWord.trim() || isSubmitting}
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Задать намёк</span>
+                  </button>
+                </div>
               </form>
             </div>
           )}

@@ -13,10 +13,6 @@ export const VerifyMatchModal: React.FC<VerifyMatchModalProps> = ({
   currentUser,
   onSubmitMatchWord,
 }) => {
-  const [word, setWord] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const authorId = room.currentQuestion?.authorId;
   const authorName = room.currentQuestion?.authorName || 'Автор';
   const partnerId = room.contactData?.partnerId;
@@ -25,6 +21,15 @@ export const VerifyMatchModal: React.FC<VerifyMatchModalProps> = ({
   const isAuthor = currentUser.id === authorId;
   const isPartner = currentUser.id === partnerId;
   const isParticipant = isAuthor || isPartner;
+
+  const [word, setWord] = useState(() => {
+    if (currentUser.id === room.currentQuestion?.authorId && room.currentQuestion?.intendedWord) {
+      return room.currentQuestion.intendedWord;
+    }
+    return '';
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const hasUserSubmitted = !!room.submissions?.[currentUser.id];
   const authorSubmitted = !!(authorId && room.submissions?.[authorId]);
@@ -120,7 +125,7 @@ export const VerifyMatchModal: React.FC<VerifyMatchModalProps> = ({
             <div className="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-600/30 text-center">
               <Sparkles className="w-6 h-6 text-indigo-400 mx-auto mb-2 animate-pulse" />
               <p className="text-sm font-semibold text-indigo-200">
-                Вы отправили слово: «{room.submissions[currentUser.id].toUpperCase()}»
+                Вы подтвердили слово: «{room.submissions[currentUser.id]?.toUpperCase()}»
               </p>
               <p className="text-xs text-slate-400 mt-1">
                 Ожидаем подтверждения от второго игрока...
@@ -137,11 +142,11 @@ export const VerifyMatchModal: React.FC<VerifyMatchModalProps> = ({
                   autoFocus
                   value={word}
                   onChange={(e) => {
-                    setWord(e.target.value);
+                    setWord(e.target.value.toUpperCase());
                     setError(null);
                   }}
-                  placeholder={`Например: ${revealedPrefix}осмос`}
-                  className="w-full px-4 py-3.5 rounded-2xl bg-slate-900 text-white placeholder-slate-500 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-lg"
+                  placeholder={`Слово на букву ${revealedPrefix.toUpperCase()}...`}
+                  className="w-full px-4 py-3.5 rounded-2xl bg-slate-900 text-white placeholder-slate-500 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-lg uppercase font-mono"
                 />
               </div>
 

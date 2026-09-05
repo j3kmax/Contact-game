@@ -68,6 +68,7 @@ export function App() {
     cancelQuestion,
     declareContact,
     deflect,
+    acceptDeflect,
     handleTimerExpired,
     submitMatchWord,
     directGuess,
@@ -174,6 +175,7 @@ export function App() {
             onCancelQuestion={cancelQuestion}
             onDeclareContact={declareContact}
             onDeflect={deflect}
+            onAcceptDeflect={acceptDeflect}
             onTimerExpired={handleTimerExpired}
             onSubmitMatchWord={submitMatchWord}
             onDirectGuess={directGuess}

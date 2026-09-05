@@ -179,7 +179,7 @@ export function useGameRoom(roomId: string | null) {
 
   // 3. Ask Question (Players only)
   const askQuestion = useCallback(
-    async (text: string) => {
+    async (text: string, intendedWord: string) => {
       if (!room || !roomId || !currentUser) return;
       if (currentUser.role === 'host') {
         throw new Error('Ведущий не может задавать вопросы');
@@ -189,17 +189,35 @@ export function useGameRoom(roomId: string | null) {
       }
 
       const cleanText = text.trim();
-      if (!cleanText) return;
+      const cleanIntended = intendedWord.trim().toUpperCase();
+
+      if (!cleanText) {
+        throw new Error('Пожалуйста, введите ваш намёк');
+      }
+      if (!cleanIntended || cleanIntended.length < 2) {
+        throw new Error('Пожалуйста, укажите загаданное вами слово (секретно)');
+      }
+
+      const revealedPrefix = normalizeWord(room.secretWord.slice(0, room.revealedLettersCount));
+      const normIntended = normalizeWord(cleanIntended);
+
+      if (!normIntended.startsWith(revealedPrefix)) {
+        throw new Error(`Задуманное слово должно начинаться на открытые буквы: «${revealedPrefix.toUpperCase()}»`);
+      }
 
       const updates: Partial<Room> = {
         currentQuestion: {
           authorId: currentUser.id,
           authorName: currentUser.name,
           text: cleanText,
+          intendedWord: cleanIntended,
           createdAt: Date.now(),
         },
         contactData: null,
-        submissions: {},
+        lastDeflectAttempt: null,
+        submissions: {
+          [currentUser.id]: cleanIntended, // Lock author's intended word in submissions
+        },
         historyLog: addLog(
           room.historyLog,
           `${currentUser.name} задал вопрос: «${cleanText}»`,
@@ -227,6 +245,7 @@ export function useGameRoom(roomId: string | null) {
     const updates: Partial<Room> = {
       currentQuestion: null,
       contactData: null,
+      lastDeflectAttempt: null,
       submissions: {},
       status: 'QUESTION_PHASE',
       historyLog: addLog(room.historyLog, `Вопрос был отменен`, 'info'),
@@ -257,7 +276,7 @@ export function useGameRoom(roomId: string | null) {
         partnerName: currentUser.name,
         timerExpiresAt,
       },
-      submissions: {},
+      lastDeflectAttempt: null,
       historyLog: addLog(
         room.historyLog,
         `⚡ ${currentUser.name} крикнул: «КОНТАКТ!» Пошел обратный отсчет 10 секунд!`,
@@ -272,13 +291,13 @@ export function useGameRoom(roomId: string | null) {
 
   // 6. Host Deflects ("Это не...")
   const deflect = useCallback(
-    async (deflectWord: string) => {
-      if (!room || !roomId || !currentUser) return { success: false, error: 'Нет подключения' };
+    async (deflectWord: string): Promise<{ success: boolean; matched: boolean; error?: string }> => {
+      if (!room || !roomId || !currentUser) return { success: false, matched: false, error: 'Нет подключения' };
       if (currentUser.role !== 'host') {
-        return { success: false, error: 'Только ведущий может отбивать вопросы' };
+        return { success: false, matched: false, error: 'Только ведущий может отбивать вопросы' };
       }
       if (!room.currentQuestion) {
-        return { success: false, error: 'Нет активного вопроса' };
+        return { success: false, matched: false, error: 'Нет активного вопроса' };
       }
 
       const cleanDeflect = normalizeWord(deflectWord);
@@ -287,28 +306,86 @@ export function useGameRoom(roomId: string | null) {
       if (!cleanDeflect.startsWith(revealedPrefix)) {
         return {
           success: false,
+          matched: false,
           error: `Слово отбития должно начинаться с открытых букв: «${revealedPrefix.toUpperCase()}»`,
         };
       }
 
-      const updates: Partial<Room> = {
-        status: 'QUESTION_PHASE',
-        currentQuestion: null,
-        contactData: null,
-        submissions: {},
-        historyLog: addLog(
-          room.historyLog,
-          `🛡️ Ведущий отбил вопрос словом: «Это не ${deflectWord.toUpperCase()}»! Вопрос снят.`,
-          'deflect'
-        ),
-      };
+      const intended = room.currentQuestion.intendedWord
+        ? normalizeWord(room.currentQuestion.intendedWord)
+        : '';
 
-      await gameStorage.updateRoom(roomId, updates);
-      sounds.playDeflect();
-      return { success: true };
+      // Check if host guessed the intended word
+      const isExactMatch = intended && cleanDeflect === intended;
+
+      if (isExactMatch) {
+        // EXACT HIT: Deflect succeeded!
+        const updates: Partial<Room> = {
+          status: 'QUESTION_PHASE',
+          currentQuestion: null,
+          contactData: null,
+          lastDeflectAttempt: null,
+          submissions: {},
+          historyLog: addLog(
+            room.historyLog,
+            `🛡️ Ведущий отгадал задуманное слово: «Это не ${deflectWord.toUpperCase()}»! Вопрос снят.`,
+            'deflect'
+          ),
+        };
+
+        await gameStorage.updateRoom(roomId, updates);
+        sounds.playDeflect();
+        return { success: true, matched: true };
+      } else {
+        // MISSED: Host said another word starting with prefix. Contact & timer continue!
+        const updates: Partial<Room> = {
+          lastDeflectAttempt: {
+            word: deflectWord.toUpperCase(),
+            timestamp: Date.now(),
+          },
+          historyLog: addLog(
+            room.historyLog,
+            `🤔 Ведущий предположил «${deflectWord.toUpperCase()}», но это не то! Время тикает!`,
+            'deflect_fail'
+          ),
+        };
+
+        await gameStorage.updateRoom(roomId, updates);
+        sounds.playPop();
+        return {
+          success: true,
+          matched: false,
+          error: `Не угадали! Автор задумал другое слово на букву «${revealedPrefix.toUpperCase()}». Пробуйте ещё!`,
+        };
+      }
     },
     [room, roomId, currentUser, addLog]
   );
+
+  // 6b. Author confirms host's deflect (if host named a synonym/valid alternative)
+  const acceptDeflect = useCallback(async () => {
+    if (!room || !roomId || !currentUser) return;
+    if (room.currentQuestion?.authorId !== currentUser.id) {
+      throw new Error('Только автор вопроса может подтвердить отбитие');
+    }
+    const deflectWord = room.lastDeflectAttempt?.word || 'слово ведущего';
+
+    const updates: Partial<Room> = {
+      status: 'QUESTION_PHASE',
+      currentQuestion: null,
+      contactData: null,
+      lastDeflectAttempt: null,
+      submissions: {},
+      historyLog: addLog(
+        room.historyLog,
+        `🤝 Автор вопроса подтвердил, что «${deflectWord}» подходит! Вопрос снят.`,
+        'deflect'
+      ),
+    };
+
+    await gameStorage.updateRoom(roomId, updates);
+    sounds.playDeflect();
+  }, [room, roomId, currentUser, addLog]);
 
   // 7. Timer Expired -> Transition to VERIFY_MATCH
   const handleTimerExpired = useCallback(async () => {
@@ -317,10 +394,10 @@ export function useGameRoom(roomId: string | null) {
 
     const updates: Partial<Room> = {
       status: 'VERIFY_MATCH',
-      submissions: {},
+      lastDeflectAttempt: null,
       historyLog: addLog(
         room.historyLog,
-        `⏰ Время вышло! Ведущий не успел отбить. Игроки сверяют свои ассоциации!`,
+        `⏰ Время вышло! Ведущий не отгадал слово. Игроки сверяют ассоциации!`,
         'info'
       ),
     };
@@ -499,6 +576,7 @@ export function useGameRoom(roomId: string | null) {
     cancelQuestion,
     declareContact,
     deflect,
+    acceptDeflect,
     handleTimerExpired,
     submitMatchWord,
     directGuess,

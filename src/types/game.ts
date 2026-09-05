@@ -19,7 +19,13 @@ export interface Question {
   authorId: string;
   authorName: string;
   text: string;
+  intendedWord?: string; // Secret word intended by the author
   createdAt?: number;
+}
+
+export interface DeflectAttempt {
+  word: string;
+  timestamp: number;
 }
 
 export interface ContactData {
@@ -33,6 +39,7 @@ export type HistoryItemType =
   | 'question'
   | 'contact'
   | 'deflect'
+  | 'deflect_fail'
   | 'match'
   | 'mismatch'
   | 'guess'
@@ -55,6 +62,7 @@ export interface Room {
   players: Record<string, Player>;
   currentQuestion: Question | null;
   contactData: ContactData | null;
+  lastDeflectAttempt?: DeflectAttempt | null;
   submissions: Record<string, string>; // playerId -> word
   historyLog: HistoryItem[];
   winner?: 'players' | 'host' | null;

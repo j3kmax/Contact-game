@@ -11,10 +11,11 @@ import { Crown, Gamepad2, Users } from 'lucide-react';
 interface GameBoardProps {
   room: Room;
   currentUser: Player;
-  onAskQuestion: (text: string) => Promise<void>;
+  onAskQuestion: (text: string, intendedWord: string) => Promise<void>;
   onCancelQuestion: () => Promise<void>;
   onDeclareContact: () => Promise<void>;
-  onDeflect: (word: string) => Promise<{ success: boolean; error?: string }>;
+  onDeflect: (word: string) => Promise<{ success: boolean; matched: boolean; error?: string }>;
+  onAcceptDeflect: () => Promise<void>;
   onTimerExpired: () => void;
   onSubmitMatchWord: (word: string) => Promise<void>;
   onDirectGuess: (word: string) => Promise<{ correct: boolean; message: string }>;
@@ -28,6 +29,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   onCancelQuestion,
   onDeclareContact,
   onDeflect,
+  onAcceptDeflect,
   onTimerExpired,
   onSubmitMatchWord,
   onDirectGuess,
@@ -60,6 +62,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             onCancelQuestion={onCancelQuestion}
             onDeclareContact={onDeclareContact}
             onDeflect={onDeflect}
+            onAcceptDeflect={onAcceptDeflect}
             onTimerExpired={onTimerExpired}
             onOpenDirectGuess={() => setIsDirectGuessOpen(true)}
           />
