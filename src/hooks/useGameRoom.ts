@@ -62,7 +62,7 @@ export function useGameRoom(roomId: string | null) {
         timestamp: Date.now(),
         text,
         type,
-        authorName,
+        ...(authorName ? { authorName } : {}),
       };
       return [newItem, ...(history || [])].slice(0, 50); // Keep last 50 entries
     },

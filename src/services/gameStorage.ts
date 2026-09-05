@@ -4,6 +4,22 @@ import { Room } from '../types/game';
 
 type RoomListener = (room: Room | null) => void;
 
+// Helper to recursively remove undefined properties (which Firebase rejects)
+function sanitizeForFirebase<T>(data: T): T {
+  if (data === undefined) return null as unknown as T;
+  if (data === null || typeof data !== 'object') return data;
+  if (Array.isArray(data)) {
+    return data.map((item) => sanitizeForFirebase(item)) as unknown as T;
+  }
+  const cleanObj: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(data as Record<string, unknown>)) {
+    if (val !== undefined) {
+      cleanObj[key] = sanitizeForFirebase(val);
+    }
+  }
+  return cleanObj as T;
+}
+
 class GameStorageService {
   private activeChannels: Map<string, BroadcastChannel> = new Map();
 
@@ -90,7 +106,8 @@ class GameStorageService {
 
     if (db && isFirebaseConfigured()) {
       const roomRef = ref(db, `rooms/${roomId}`);
-      await set(roomRef, room);
+      const cleanRoom = sanitizeForFirebase(room);
+      await set(roomRef, cleanRoom);
       return;
     }
 
@@ -108,10 +125,11 @@ class GameStorageService {
 
     if (db && isFirebaseConfigured()) {
       const roomRef = ref(db, `rooms/${roomId}`);
-      await update(roomRef, {
+      const cleanUpdates = sanitizeForFirebase({
         ...updates,
-        updatedAt: Date.now()
+        updatedAt: Date.now(),
       });
+      await update(roomRef, cleanUpdates);
       return;
     }
 
@@ -121,7 +139,7 @@ class GameStorageService {
     const updatedRoom: Room = {
       ...existing,
       ...updates,
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
     };
     await this.saveRoom(roomId, updatedRoom);
   }
