@@ -28,9 +28,15 @@ export interface DeflectAttempt {
   timestamp: number;
 }
 
+export interface ContactPartner {
+  id: string;
+  name: string;
+}
+
 export interface ContactData {
   partnerId: string;
   partnerName: string;
+  additionalPartners?: ContactPartner[];
   timerExpiresAt: number; // unix timestamp ms
 }
 

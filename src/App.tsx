@@ -67,10 +67,11 @@ export function App() {
     askQuestion,
     cancelQuestion,
     declareContact,
+    joinContact,
+    hostGiveUp,
     deflect,
     acceptDeflect,
     handleTimerExpired,
-    submitMatchWord,
     directGuess,
     restartGame,
   } = useGameRoom(roomId);
@@ -174,10 +175,11 @@ export function App() {
             onAskQuestion={askQuestion}
             onCancelQuestion={cancelQuestion}
             onDeclareContact={declareContact}
+            onJoinContact={joinContact}
+            onHostGiveUp={hostGiveUp}
             onDeflect={deflect}
             onAcceptDeflect={acceptDeflect}
             onTimerExpired={handleTimerExpired}
-            onSubmitMatchWord={submitMatchWord}
             onDirectGuess={directGuess}
             onRestartGame={restartGame}
           />

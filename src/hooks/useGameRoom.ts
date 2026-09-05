@@ -254,40 +254,113 @@ export function useGameRoom(roomId: string | null) {
     await gameStorage.updateRoom(roomId, updates);
   }, [room, roomId, currentUser, addLog]);
 
-  // 5. Declare Contact
-  const declareContact = useCallback(async () => {
-    if (!room || !roomId || !currentUser) return;
-    if (currentUser.role === 'host') {
-      throw new Error('Ведущий не может нажимать Контакт');
+  // Auto-recover from stuck VERIFY_MATCH state
+  useEffect(() => {
+    if (room && room.status === 'VERIFY_MATCH') {
+      gameStorage.updateRoom(room.roomId, {
+        status: 'QUESTION_PHASE',
+        currentQuestion: null,
+        contactData: null,
+        submissions: {},
+        lastDeflectAttempt: null,
+      });
     }
-    if (room.status !== 'QUESTION_PHASE' || !room.currentQuestion) {
-      throw new Error('Нет активного вопроса для контакта');
-    }
-    if (room.currentQuestion.authorId === currentUser.id) {
-      throw new Error('Автор вопроса не может нажимать Контакт на свой же вопрос');
-    }
+  }, [room]);
 
-    const timerExpiresAt = Date.now() + 10000; // 10 seconds
+  // 5. Declare Contact (Partner submits word immediately)
+  const declareContact = useCallback(
+    async (partnerWord: string) => {
+      if (!room || !roomId || !currentUser) return;
+      if (currentUser.role === 'host') {
+        throw new Error('Ведущий не может нажимать Контакт');
+      }
+      if (room.status !== 'QUESTION_PHASE' || !room.currentQuestion) {
+        throw new Error('Нет активного вопроса для контакта');
+      }
+      if (room.currentQuestion.authorId === currentUser.id) {
+        throw new Error('Автор вопроса не может нажимать Контакт на свой же вопрос');
+      }
 
-    const updates: Partial<Room> = {
-      status: 'CONTACT_DECLARED',
-      contactData: {
-        partnerId: currentUser.id,
-        partnerName: currentUser.name,
-        timerExpiresAt,
-      },
-      lastDeflectAttempt: null,
-      historyLog: addLog(
-        room.historyLog,
-        `⚡ ${currentUser.name} крикнул: «КОНТАКТ!» Пошел обратный отсчет 10 секунд!`,
-        'contact',
-        currentUser.name
-      ),
-    };
+      const cleanWord = normalizeWord(partnerWord);
+      const revealedPrefix = normalizeWord(room.secretWord.slice(0, room.revealedLettersCount));
 
-    await gameStorage.updateRoom(roomId, updates);
-    sounds.playContactAlert();
-  }, [room, roomId, currentUser, addLog]);
+      if (!cleanWord.startsWith(revealedPrefix)) {
+        throw new Error(`Слово должно начинаться с открытых букв: «${revealedPrefix.toUpperCase()}»`);
+      }
+
+      const timerExpiresAt = Date.now() + 10000; // 10 seconds
+
+      const updates: Partial<Room> = {
+        status: 'CONTACT_DECLARED',
+        contactData: {
+          partnerId: currentUser.id,
+          partnerName: currentUser.name,
+          additionalPartners: [],
+          timerExpiresAt,
+        },
+        submissions: {
+          ...(room.submissions || {}),
+          [currentUser.id]: partnerWord.trim().toUpperCase(),
+        },
+        lastDeflectAttempt: null,
+        historyLog: addLog(
+          room.historyLog,
+          `⚡ ${currentUser.name} крикнул: «КОНТАКТ!» Пошел обратный отсчет 10 секунд!`,
+          'contact',
+          currentUser.name
+        ),
+      };
+
+      await gameStorage.updateRoom(roomId, updates);
+      sounds.playContactAlert();
+    },
+    [room, roomId, currentUser, addLog]
+  );
+
+  // 5b. Another player joins the contact during the 10 seconds
+  const joinContact = useCallback(
+    async (word: string) => {
+      if (!room || !roomId || !currentUser) return;
+      if (currentUser.role === 'host') return;
+      if (room.status !== 'CONTACT_DECLARED' || !room.contactData) return;
+      if (room.currentQuestion?.authorId === currentUser.id) return;
+      if (room.contactData.partnerId === currentUser.id) return;
+
+      const cleanWord = normalizeWord(word);
+      const revealedPrefix = normalizeWord(room.secretWord.slice(0, room.revealedLettersCount));
+
+      if (!cleanWord.startsWith(revealedPrefix)) {
+        throw new Error(`Слово должно начинаться с открытых букв: «${revealedPrefix.toUpperCase()}»`);
+      }
+
+      const existingAdditional = room.contactData.additionalPartners || [];
+      if (existingAdditional.some((p) => p.id === currentUser.id)) return;
+
+      const updates: Partial<Room> = {
+        contactData: {
+          ...room.contactData,
+          additionalPartners: [
+            ...existingAdditional,
+            { id: currentUser.id, name: currentUser.name },
+          ],
+        },
+        submissions: {
+          ...(room.submissions || {}),
+          [currentUser.id]: word.trim().toUpperCase(),
+        },
+        historyLog: addLog(
+          room.historyLog,
+          `🤝 ${currentUser.name} тоже присоединился к контакту!`,
+          'contact',
+          currentUser.name
+        ),
+      };
+
+      await gameStorage.updateRoom(roomId, updates);
+      sounds.playPop();
+    },
+    [room, roomId, currentUser, addLog]
+  );
 
   // 6. Host Deflects ("Это не...")
   const deflect = useCallback(
@@ -387,120 +460,112 @@ export function useGameRoom(roomId: string | null) {
     sounds.playDeflect();
   }, [room, roomId, currentUser, addLog]);
 
-  // 7. Timer Expired -> Transition to VERIFY_MATCH
+  // 7. Evaluate Contact (Instant result when timer expires or host surrenders)
+  const evaluateContact = useCallback(async () => {
+    if (!room || !roomId) return;
+    if (room.status !== 'CONTACT_DECLARED') return;
+    if (!room.currentQuestion || !room.contactData) {
+      await gameStorage.updateRoom(roomId, {
+        status: 'QUESTION_PHASE',
+        currentQuestion: null,
+        contactData: null,
+        submissions: {},
+        lastDeflectAttempt: null,
+      });
+      return;
+    }
+
+    const authorId = room.currentQuestion.authorId;
+    const authorWord =
+      room.submissions?.[authorId] ||
+      room.currentQuestion.intendedWord ||
+      '';
+
+    const primaryPartnerId = room.contactData.partnerId;
+    const allPartnerIds = [
+      primaryPartnerId,
+      ...(room.contactData.additionalPartners || []).map((p) => p.id),
+    ];
+
+    const normAuthor = normalizeWord(authorWord);
+    let allMatch = true;
+    const detailsList: string[] = [];
+
+    for (const pId of allPartnerIds) {
+      const pName =
+        room.players?.[pId]?.name ||
+        (pId === primaryPartnerId ? room.contactData.partnerName : 'Игрок');
+      const pWord = room.submissions?.[pId] || '';
+      const normP = normalizeWord(pWord);
+
+      if (!normP || normP !== normAuthor) {
+        allMatch = false;
+      }
+      detailsList.push(`${pName}: «${pWord || '—'}»`);
+    }
+
+    if (allMatch && normAuthor) {
+      // SUCCESS!
+      const nextCount = room.revealedLettersCount + 1;
+      const isGameOver = nextCount >= room.secretWord.length;
+      const revealedLetter = room.secretWord[nextCount - 1];
+
+      let logMsg = `🎉 КОНТАКТ УСПЕШЕН! Все игроки назвали слово «${authorWord.toUpperCase()}» (${detailsList.join(', ')})! Открыта буква: «${revealedLetter}»!`;
+      if (isGameOver) {
+        logMsg = `🏆 ПОБЕДА ИГРОКОВ! Открыто всё слово: «${room.secretWord}»!`;
+      }
+
+      const updates: Partial<Room> = {
+        revealedLettersCount: isGameOver ? room.secretWord.length : nextCount,
+        status: isGameOver ? 'GAME_OVER' : 'QUESTION_PHASE',
+        winner: isGameOver ? 'players' : null,
+        currentQuestion: null,
+        contactData: null,
+        submissions: {},
+        lastDeflectAttempt: null,
+        historyLog: addLog(room.historyLog, logMsg, 'match'),
+      };
+
+      await gameStorage.updateRoom(roomId, updates);
+      if (isGameOver) {
+        sounds.playWin();
+      } else {
+        sounds.playSuccess();
+      }
+    } else {
+      // MISMATCH!
+      const failMsg = `❌ Контакт провален! Автор загадал «${authorWord.toUpperCase()}», но ответы игроков не совпали (${detailsList.join(', ')}). По правилам, если кто-то ошибся, контакт не засчитывается! Буква не открыта.`;
+
+      const updates: Partial<Room> = {
+        status: 'QUESTION_PHASE',
+        currentQuestion: null,
+        contactData: null,
+        submissions: {},
+        lastDeflectAttempt: null,
+        historyLog: addLog(room.historyLog, failMsg, 'mismatch'),
+      };
+
+      await gameStorage.updateRoom(roomId, updates);
+      sounds.playFail();
+    }
+  }, [room, roomId, addLog]);
+
+  // Host gives up (skips 10s timer)
+  const hostGiveUp = useCallback(async () => {
+    if (!room || !roomId || !currentUser) return;
+    if (currentUser.role !== 'host') return;
+    if (room.status !== 'CONTACT_DECLARED') return;
+
+    await evaluateContact();
+  }, [room, roomId, currentUser, evaluateContact]);
+
+  // Timer Expired -> Evaluates immediately
   const handleTimerExpired = useCallback(async () => {
     if (!room || !roomId) return;
     if (room.status !== 'CONTACT_DECLARED') return;
 
-    const updates: Partial<Room> = {
-      status: 'VERIFY_MATCH',
-      lastDeflectAttempt: null,
-      historyLog: addLog(
-        room.historyLog,
-        `⏰ Время вышло! Ведущий не отгадал слово. Игроки сверяют ассоциации!`,
-        'info'
-      ),
-    };
-
-    await gameStorage.updateRoom(roomId, updates);
-  }, [room, roomId, addLog]);
-
-  // 8. Submit Word in VERIFY_MATCH
-  const submitMatchWord = useCallback(
-    async (word: string) => {
-      if (!room || !roomId || !currentUser) return;
-      if (room.status !== 'VERIFY_MATCH') return;
-
-      const isAuthor = room.currentQuestion?.authorId === currentUser.id;
-      const isPartner = room.contactData?.partnerId === currentUser.id;
-
-      if (!isAuthor && !isPartner) {
-        throw new Error('Только автор вопроса и партнер контакта вводят слова');
-      }
-
-      const cleanWord = normalizeWord(word);
-      const revealedPrefix = normalizeWord(room.secretWord.slice(0, room.revealedLettersCount));
-
-      if (!cleanWord.startsWith(revealedPrefix)) {
-        throw new Error(`Слово должно начинаться с открытых букв: «${revealedPrefix.toUpperCase()}»`);
-      }
-
-      const updatedSubmissions = {
-        ...(room.submissions || {}),
-        [currentUser.id]: word.trim(),
-      };
-
-      const authorId = room.currentQuestion!.authorId;
-      const partnerId = room.contactData!.partnerId;
-
-      const authorWord = updatedSubmissions[authorId];
-      const partnerWord = updatedSubmissions[partnerId];
-
-      if (authorWord && partnerWord) {
-        // Both submitted! Compare!
-        const normAuthor = normalizeWord(authorWord);
-        const normPartner = normalizeWord(partnerWord);
-
-        if (normAuthor === normPartner) {
-          // MATCH! Success!
-          const nextCount = room.revealedLettersCount + 1;
-          const isGameOver = nextCount >= room.secretWord.length;
-          const revealedLetter = room.secretWord[nextCount - 1];
-
-          let logMessage = `🎉 КОНТАКТ УСПЕШЕН! Слова совпали: «${authorWord.toUpperCase()}»! Открыта буква: «${revealedLetter}».`;
-          if (isGameOver) {
-            logMessage = `🏆 ПОБЕДА ИГРОКОВ! Открыто всё слово: «${room.secretWord}»!`;
-          }
-
-          const updates: Partial<Room> = {
-            revealedLettersCount: isGameOver ? room.secretWord.length : nextCount,
-            status: isGameOver ? 'GAME_OVER' : 'QUESTION_PHASE',
-            winner: isGameOver ? 'players' : null,
-            currentQuestion: null,
-            contactData: null,
-            submissions: updatedSubmissions,
-            historyLog: addLog(room.historyLog, logMessage, 'match'),
-          };
-
-          await gameStorage.updateRoom(roomId, updates);
-          if (isGameOver) {
-            sounds.playWin();
-          } else {
-            sounds.playSuccess();
-          }
-        } else {
-          // MISMATCH! Fail!
-          const updates: Partial<Room> = {
-            status: 'QUESTION_PHASE',
-            currentQuestion: null,
-            contactData: null,
-            submissions: updatedSubmissions,
-            historyLog: addLog(
-              room.historyLog,
-              `❌ Контакт провален! ${room.currentQuestion?.authorName} имел в виду «${authorWord}», а ${room.contactData?.partnerName} думал о «${partnerWord}». Буква не открыта.`,
-              'mismatch'
-            ),
-          };
-
-          await gameStorage.updateRoom(roomId, updates);
-          sounds.playFail();
-        }
-      } else {
-        // Waiting for the other player
-        const updates: Partial<Room> = {
-          submissions: updatedSubmissions,
-          historyLog: addLog(
-            room.historyLog,
-            `${currentUser.name} ввел свое слово и ждет напарника...`,
-            'info'
-          ),
-        };
-        await gameStorage.updateRoom(roomId, updates);
-        sounds.playPop();
-      }
-    },
-    [room, roomId, currentUser, addLog]
-  );
+    await evaluateContact();
+  }, [room, roomId, evaluateContact]);
 
   // 9. Direct Guess (Any player guesses entire word)
   const directGuess = useCallback(
@@ -575,10 +640,11 @@ export function useGameRoom(roomId: string | null) {
     askQuestion,
     cancelQuestion,
     declareContact,
+    joinContact,
+    hostGiveUp,
     deflect,
     acceptDeflect,
     handleTimerExpired,
-    submitMatchWord,
     directGuess,
     restartGame,
   };

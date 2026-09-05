@@ -3,7 +3,6 @@ import { Room, Player } from '../types/game';
 import { WordDisplay } from './WordDisplay';
 import { ActionPanel } from './ActionPanel';
 import { HistoryLog } from './HistoryLog';
-import { VerifyMatchModal } from './VerifyMatchModal';
 import { DirectGuessModal } from './DirectGuessModal';
 import { GameOverModal } from './GameOverModal';
 import { Crown, Gamepad2, Users } from 'lucide-react';
@@ -13,11 +12,12 @@ interface GameBoardProps {
   currentUser: Player;
   onAskQuestion: (text: string, intendedWord: string) => Promise<void>;
   onCancelQuestion: () => Promise<void>;
-  onDeclareContact: () => Promise<void>;
+  onDeclareContact: (partnerWord: string) => Promise<void>;
+  onJoinContact: (word: string) => Promise<void>;
+  onHostGiveUp: () => Promise<void>;
   onDeflect: (word: string) => Promise<{ success: boolean; matched: boolean; error?: string }>;
   onAcceptDeflect: () => Promise<void>;
   onTimerExpired: () => void;
-  onSubmitMatchWord: (word: string) => Promise<void>;
   onDirectGuess: (word: string) => Promise<{ correct: boolean; message: string }>;
   onRestartGame: () => Promise<void>;
 }
@@ -28,17 +28,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   onAskQuestion,
   onCancelQuestion,
   onDeclareContact,
+  onJoinContact,
+  onHostGiveUp,
   onDeflect,
   onAcceptDeflect,
   onTimerExpired,
-  onSubmitMatchWord,
   onDirectGuess,
   onRestartGame,
 }) => {
   const [isDirectGuessOpen, setIsDirectGuessOpen] = useState(false);
 
   const isGameOver = room.status === 'GAME_OVER';
-  const isVerifyPhase = room.status === 'VERIFY_MATCH';
   const playersList = Object.values(room.players || {});
 
   return (
@@ -61,6 +61,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             onAskQuestion={onAskQuestion}
             onCancelQuestion={onCancelQuestion}
             onDeclareContact={onDeclareContact}
+            onJoinContact={onJoinContact}
+            onHostGiveUp={onHostGiveUp}
             onDeflect={onDeflect}
             onAcceptDeflect={onAcceptDeflect}
             onTimerExpired={onTimerExpired}
@@ -86,6 +88,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 const isMe = p.id === currentUser.id;
                 const isQuestionAuthor = room.currentQuestion?.authorId === p.id;
                 const isContactPartner = room.contactData?.partnerId === p.id;
+                const isAdditionalPartner = room.contactData?.additionalPartners?.some((ap) => ap.id === p.id);
 
                 return (
                   <div
@@ -113,7 +116,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       <span className="w-2 h-2 rounded-full bg-indigo-400" title="Автор вопроса" />
                     )}
                     {isContactPartner && (
-                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" title="Нажал Контакт" />
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" title="Объявил Контакт" />
+                    )}
+                    {isAdditionalPartner && (
+                      <span className="w-2 h-2 rounded-full bg-cyan-400" title="Поддержал Контакт" />
                     )}
                   </div>
                 );
@@ -125,15 +131,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           <HistoryLog history={room.historyLog} />
         </div>
       </div>
-
-      {/* Modals */}
-      {isVerifyPhase && (
-        <VerifyMatchModal
-          room={room}
-          currentUser={currentUser}
-          onSubmitMatchWord={onSubmitMatchWord}
-        />
-      )}
 
       <DirectGuessModal
         isOpen={isDirectGuessOpen}

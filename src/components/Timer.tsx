@@ -16,6 +16,11 @@ export const Timer: React.FC<TimerProps> = ({ timerExpiresAt, onExpired, isHost 
 
   const expiredTriggered = useRef(false);
   const lastSecondTicked = useRef<number | null>(null);
+  const onExpiredRef = useRef(onExpired);
+
+  useEffect(() => {
+    onExpiredRef.current = onExpired;
+  }, [onExpired]);
 
   useEffect(() => {
     expiredTriggered.current = false;
@@ -36,12 +41,12 @@ export const Timer: React.FC<TimerProps> = ({ timerExpiresAt, onExpired, isHost 
       if (remainingMs <= 0 && !expiredTriggered.current) {
         expiredTriggered.current = true;
         clearInterval(interval);
-        onExpired();
+        onExpiredRef.current();
       }
     }, 100);
 
     return () => clearInterval(interval);
-  }, [timerExpiresAt, onExpired]);
+  }, [timerExpiresAt]);
 
   const percentage = Math.min(100, Math.max(0, (secondsLeft / 10) * 100));
   const isUrgent = secondsLeft <= 3;

@@ -65,4 +65,17 @@ describe('Contact Game Logic & Normalization', () => {
     revealedLettersCount += 1; // 3
     expect(revealedLettersCount >= secretWord.length).toBe(true);
   });
+
+  it('correctly evaluates multi-player contact: all must match, fails if anyone fails', () => {
+    const authorWord = 'САМОЛЕТ';
+    const normAuthor = normalizeWord(authorWord);
+
+    const partnerWordsAllCorrect = ['самолет', ' САМОЛЕТ ', 'самолёт'];
+    const allMatch1 = partnerWordsAllCorrect.every((w) => normalizeWord(w) === normAuthor);
+    expect(allMatch1).toBe(true);
+
+    const partnerWordsOneMistake = ['самолет', 'САХАР', 'самолет'];
+    const allMatch2 = partnerWordsOneMistake.every((w) => normalizeWord(w) === normAuthor);
+    expect(allMatch2).toBe(false);
+  });
 });

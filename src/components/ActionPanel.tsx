@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, Shield, Zap, XCircle, KeyRound, HelpCircle, AlertCircle, CheckCircle2, Lock } from 'lucide-react';
+import { Send, Shield, Zap, XCircle, KeyRound, HelpCircle, AlertCircle, CheckCircle2, Lock, Flag, Users } from 'lucide-react';
 import { Room, Player } from '../types/game';
 import { Timer } from './Timer';
 
@@ -8,7 +8,9 @@ interface ActionPanelProps {
   currentUser: Player;
   onAskQuestion: (text: string, intendedWord: string) => Promise<void>;
   onCancelQuestion: () => Promise<void>;
-  onDeclareContact: () => Promise<void>;
+  onDeclareContact: (partnerWord: string) => Promise<void>;
+  onJoinContact: (word: string) => Promise<void>;
+  onHostGiveUp: () => Promise<void>;
   onDeflect: (word: string) => Promise<{ success: boolean; matched: boolean; error?: string }>;
   onAcceptDeflect: () => Promise<void>;
   onTimerExpired: () => void;
@@ -21,6 +23,8 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   onAskQuestion,
   onCancelQuestion,
   onDeclareContact,
+  onJoinContact,
+  onHostGiveUp,
   onDeflect,
   onAcceptDeflect,
   onTimerExpired,
@@ -30,9 +34,20 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   const [intendedWord, setIntendedWord] = useState('');
   const [askError, setAskError] = useState<string | null>(null);
 
+  // Deflect state (Host)
   const [deflectWord, setDeflectWord] = useState('');
   const [deflectFeedback, setDeflectFeedback] = useState<{ message: string; isError: boolean } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Declare contact state (First player)
+  const [isDeclaringContact, setIsDeclaringContact] = useState(false);
+  const [contactWord, setContactWord] = useState('');
+  const [contactError, setContactError] = useState<string | null>(null);
+
+  // Join contact state (Other players)
+  const [isJoiningContact, setIsJoiningContact] = useState(false);
+  const [joinWord, setJoinWord] = useState('');
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   const isHost = currentUser.role === 'host';
   const hasActiveQuestion = !!room.currentQuestion;
@@ -40,7 +55,13 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   const isContactDeclared = room.status === 'CONTACT_DECLARED';
   const revealedPrefix = room.secretWord.slice(0, room.revealedLettersCount);
 
-  // Submit question handler
+  const isPrimaryPartner = room.contactData?.partnerId === currentUser.id;
+  const hasJoinedContact =
+    isPrimaryPartner ||
+    !!room.contactData?.additionalPartners?.some((p) => p.id === currentUser.id) ||
+    !!room.submissions?.[currentUser.id];
+
+  // 1. Submit question handler
   const handleAskSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!questionText.trim() || !intendedWord.trim() || isSubmitting) return;
@@ -58,7 +79,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
     }
   };
 
-  // Deflect handler for host
+  // 2. Deflect handler for host
   const handleDeflectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!deflectWord.trim() || isSubmitting) return;
@@ -82,6 +103,42 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
         message: err instanceof Error ? err.message : 'Ошибка при отбитии',
         isError: true,
       });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // 3. Declare Contact with immediate word input
+  const handleDeclareContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactWord.trim() || isSubmitting) return;
+
+    setContactError(null);
+    try {
+      setIsSubmitting(true);
+      await onDeclareContact(contactWord.trim().toUpperCase());
+      setIsDeclaringContact(false);
+      setContactWord('');
+    } catch (err: unknown) {
+      setContactError(err instanceof Error ? err.message : 'Ошибка при объявлении контакта');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // 4. Join Contact for other players
+  const handleJoinContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!joinWord.trim() || isSubmitting) return;
+
+    setJoinError(null);
+    try {
+      setIsSubmitting(true);
+      await onJoinContact(joinWord.trim().toUpperCase());
+      setIsJoiningContact(false);
+      setJoinWord('');
+    } catch (err: unknown) {
+      setJoinError(err instanceof Error ? err.message : 'Ошибка при присоединении к контакту');
     } finally {
       setIsSubmitting(false);
     }
@@ -124,25 +181,38 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
               </div>
             </div>
 
-            {/* Cancel Question (Author only) */}
-            {isQuestionAuthor && !isContactDeclared && (
+            {/* Cancel Question (Author or Host) */}
+            {(isQuestionAuthor || isHost) && (
               <button
                 onClick={() => onCancelQuestion()}
                 className="self-end sm:self-center px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 border border-slate-700/60 hover:border-rose-800/50 text-xs font-medium flex items-center gap-1.5 transition-colors"
+                title={isHost ? 'Сбросить вопрос' : 'Снять вопрос'}
               >
                 <XCircle className="w-3.5 h-3.5" />
-                Снять вопрос
+                <span>{isHost && !isQuestionAuthor ? 'Сбросить вопрос' : 'Снять вопрос'}</span>
               </button>
             )}
           </div>
 
           {/* Contact declared indicator inside question card */}
           {isContactDeclared && (
-            <div className="mt-3 pt-3 border-t border-slate-800 text-xs text-amber-300 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-400 animate-bounce" />
-              <span>
-                <strong>{room.contactData?.partnerName}</strong> крикнул Контакт! Ведущий пытается отгадать...
-              </span>
+            <div className="mt-3 pt-3 border-t border-slate-800 text-xs text-amber-300 flex flex-col gap-1.5">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-amber-400 animate-bounce" />
+                <span>
+                  <strong>{room.contactData?.partnerName}</strong> объявил контакт!
+                  {isHost ? ' Отгадайте слово или сдайтесь!' : ' Ведущий пытается отгадать...'}
+                </span>
+              </div>
+              {/* Additional partners list */}
+              {room.contactData?.additionalPartners && room.contactData.additionalPartners.length > 0 && (
+                <div className="flex items-center gap-1.5 text-cyan-300 text-[11px] pl-6">
+                  <Users className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>
+                    Также поддержали: <strong>{room.contactData.additionalPartners.map((p) => p.name).join(', ')}</strong>
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
@@ -182,8 +252,10 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
           </div>
 
           <p className="text-xs text-slate-300 mb-4">
-            Отгадайте, какое слово имел в виду игрок. Если не угадаете — таймер продолжит идти!
-            Слово обязано начинаться на:{' '}
+            {isContactDeclared
+              ? 'Контакт объявлен! Срочно отгадайте задуманное слово или нажмите «Сдаюсь»:'
+              : 'Отгадайте намёк игрока сразу («Это не...»), пока никто не нажал Контакт!'}
+            {' '}Слово на букву:{' '}
             <strong className="text-amber-300 font-mono text-sm">{revealedPrefix}...</strong>
           </p>
 
@@ -221,19 +293,185 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
               <span>{deflectFeedback.message}</span>
             </div>
           )}
+
+          {/* Early surrender button for host during declared contact */}
+          {isContactDeclared && (
+            <div className="mt-4 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-slate-400">
+                Не знаете слово? Сдайтесь, чтобы сразу сверить слова и открыть букву без ожидания 10 секунд:
+              </div>
+              <button
+                type="button"
+                onClick={onHostGiveUp}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-rose-950/80 text-rose-300 hover:text-rose-200 border border-rose-600/30 text-xs font-bold flex items-center justify-center gap-2 transition-colors shrink-0 shadow-md"
+              >
+                <Flag className="w-3.5 h-3.5" />
+                <span>Сдаюсь (Не знаю слово)</span>
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         /* REGULAR PLAYER VIEW */
         <div className="flex flex-col gap-4">
-          {/* Big "ЕСТЬ КОНТАКТ!" Button when question is active and not author */}
+          {/* Phase 1: Question active, contact not yet declared */}
           {hasActiveQuestion && !isQuestionAuthor && !isContactDeclared && (
-            <button
-              onClick={() => onDeclareContact()}
-              className="w-full py-5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xl sm:text-2xl tracking-wide uppercase shadow-2xl shadow-emerald-500/30 flex items-center justify-center gap-3 transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] animate-pulse-fast border-2 border-emerald-300/40"
-            >
-              <Zap className="w-7 h-7 fill-current" />
-              <span>ЕСТЬ КОНТАКТ!</span>
-            </button>
+            <div>
+              {!isDeclaringContact ? (
+                <button
+                  onClick={() => {
+                    setIsDeclaringContact(true);
+                    setContactWord(revealedPrefix);
+                    setContactError(null);
+                  }}
+                  className="w-full py-5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xl sm:text-2xl tracking-wide uppercase shadow-2xl shadow-emerald-500/30 flex items-center justify-center gap-3 transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] animate-pulse-fast border-2 border-emerald-300/40"
+                >
+                  <Zap className="w-7 h-7 fill-current" />
+                  <span>ЕСТЬ КОНТАКТ!</span>
+                </button>
+              ) : (
+                /* Instant Word Input Form for declaring contact */
+                <div className="glass-panel-glow rounded-2xl p-5 sm:p-6 border border-emerald-500/40 bg-gradient-to-br from-emerald-950/40 via-slate-900/90 to-teal-950/40 animate-fade-in">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 text-emerald-400 font-bold text-base">
+                      <Zap className="w-5 h-5 fill-emerald-400" />
+                      <span>ОБЪЯВИТЬ КОНТАКТ</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsDeclaringContact(false);
+                        setContactError(null);
+                      }}
+                      className="text-xs text-slate-400 hover:text-white px-2.5 py-1 rounded-lg hover:bg-slate-800 transition-colors"
+                    >
+                      Отмена
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-slate-300 mb-3">
+                    Какое слово вы поняли по намёку: <strong className="text-white">«{room.currentQuestion?.text}»</strong>?
+                    Оно должно начинаться на: <strong className="text-emerald-300 font-mono text-sm">{revealedPrefix}...</strong>
+                  </p>
+
+                  <form onSubmit={handleDeclareContactSubmit} className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={contactWord}
+                      onChange={(e) => {
+                        setContactWord(e.target.value.toUpperCase());
+                        setContactError(null);
+                      }}
+                      placeholder={`Слово на ${revealedPrefix}...`}
+                      className="flex-1 px-4 py-3 rounded-xl bg-slate-950/90 text-emerald-300 font-mono font-bold text-base uppercase border border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-slate-600"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!contactWord.trim() || isSubmitting}
+                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-sm uppercase shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+                    >
+                      <Zap className="w-4 h-4 fill-current" />
+                      <span>Подтвердить контакт</span>
+                    </button>
+                  </form>
+
+                  {contactError && (
+                    <div className="mt-2.5 text-xs text-rose-400 flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{contactError}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Phase 2: Contact Declared (10s countdown running) */}
+          {hasActiveQuestion && isContactDeclared && !isQuestionAuthor && (
+            <div>
+              {hasJoinedContact ? (
+                <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 flex items-center gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <div>
+                    <div className="text-sm font-bold text-emerald-200">
+                      {isPrimaryPartner ? 'Вы объявили контакт!' : 'Вы поддержали контакт!'}
+                    </div>
+                    <div className="text-xs text-slate-300">
+                      Ваше слово: <strong className="font-mono text-emerald-300">«{room.submissions?.[currentUser.id] || '—'}»</strong>.
+                      Ожидаем окончания отсчёта или решения ведущего...
+                    </div>
+                  </div>
+                </div>
+              ) : !isJoiningContact ? (
+                /* Button for other players to join the contact */
+                <button
+                  onClick={() => {
+                    setIsJoiningContact(true);
+                    setJoinWord(revealedPrefix);
+                    setJoinError(null);
+                  }}
+                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-500 hover:to-blue-500 text-white font-bold text-base sm:text-lg shadow-xl shadow-teal-500/20 flex items-center justify-center gap-2.5 transition-all transform hover:scale-[1.01] active:scale-[0.99] border border-cyan-400/30"
+                >
+                  <Users className="w-5 h-5 text-cyan-200" />
+                  <span>🤝 Я тоже знаю! Присоединиться к контакту</span>
+                </button>
+              ) : (
+                /* Form for other players to enter their word */
+                <div className="glass-panel-glow rounded-2xl p-5 border border-cyan-500/40 bg-gradient-to-br from-cyan-950/40 via-slate-900/90 to-blue-950/40 animate-fade-in">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
+                      <Users className="w-4 h-4" />
+                      <span>ПОДДЕРЖАТЬ КОНТАКТ</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsJoiningContact(false);
+                        setJoinError(null);
+                      }}
+                      className="text-xs text-slate-400 hover:text-white px-2.5 py-1 rounded-lg hover:bg-slate-800 transition-colors"
+                    >
+                      Отмена
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-slate-300 mb-3">
+                    Внимание: по правилам, <strong>все поддержавшие игроки</strong> должны правильно отгадать слово автора.
+                    Если кто-то ошибётся — буква не откроется! Слово на: <strong className="text-cyan-300 font-mono">{revealedPrefix}...</strong>
+                  </p>
+
+                  <form onSubmit={handleJoinContactSubmit} className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={joinWord}
+                      onChange={(e) => {
+                        setJoinWord(e.target.value.toUpperCase());
+                        setJoinError(null);
+                      }}
+                      placeholder={`Ваше слово (${revealedPrefix}...)...`}
+                      className="flex-1 px-4 py-3 rounded-xl bg-slate-950/90 text-cyan-200 font-mono font-bold text-base uppercase border border-cyan-500/40 focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder-slate-600"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!joinWord.trim() || isSubmitting}
+                      className="px-5 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm uppercase shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Подтвердить</span>
+                    </button>
+                  </form>
+
+                  {joinError && (
+                    <div className="mt-2 text-xs text-rose-400 flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{joinError}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
 
           {/* Form to ask question (when no active question) */}
