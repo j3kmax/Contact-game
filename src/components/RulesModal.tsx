@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle, X, Shield, Zap, Lock, Trophy, Sparkles } from 'lucide-react';
+import { HelpCircle, X, Shield, Zap, Lock, Trophy, Sparkles, Mic, Medal } from 'lucide-react';
 
 interface RulesModalProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
           </div>
           <div>
             <h3 className="text-2xl font-black text-white">Правила игры «Контакт»</h3>
-            <p className="text-xs text-slate-400">Классическая словесная party-игра для компании</p>
+            <p className="text-xs text-slate-400">Для голосового чата (Discord) с системой баллов</p>
           </div>
         </div>
 
@@ -38,7 +38,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
             <div>
               <h4 className="font-bold text-white mb-1">1. Начало и ведущий</h4>
               <p>
-                Ведущий загадывает тайное слово (например, <strong>«КОСМОДРОМ»</strong>). В начале игры открывается первая буква: <strong>«К...»</strong>. Цель игроков — угадать всё слово, открывая букву за буквой.
+                Ведущий загадывает слово (например, <strong>«КОСМОДРОМ»</strong>). В начале игры открывается первая буква: <strong>«К...»</strong>. Цель игроков — открывать букву за буквой.
               </p>
             </div>
           </div>
@@ -46,12 +46,12 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
           {/* Rule 2 */}
           <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 flex gap-3">
             <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0 mt-0.5">
-              <Sparkles className="w-4 h-4" />
+              <Mic className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="font-bold text-white mb-1">2. Вопросы и ассоциации</h4>
+              <h4 className="font-bold text-white mb-1">2. Очередь и голосовой намёк в Discord</h4>
               <p>
-                Любой игрок может задать намёк на другое слово, начинающееся на открытые буквы (например: <em>«Это не то, чем копают огород?»</em> — имея в виду слово <strong>Лопата</strong> или на К — <strong>Культиватор</strong>).
+                Игроки ходят <strong>строго по очереди по кругу</strong>. В свой ход игрок вводит секретное слово-отгадку в игре, а саму ассоциацию <strong>озвучивает вслух голосом в Discord</strong> (например: <em>«Это не то, чем копают землю?»</em>).
               </p>
             </div>
           </div>
@@ -64,10 +64,9 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
             <div>
               <h4 className="font-bold text-white mb-1">3. «Есть контакт!» и отбитие ведущего</h4>
               <p>
-                Ведущий может отбить намёк <strong>сразу же</strong>, сказав <em>«Это не...»</em>.
-                Если другой игрок понял намёк, он жмет <strong>«КОНТАКТ!»</strong> и сразу вводит отгадку.
-                Запускается отсчет 10 секунд. Другие игроки могут тоже присоединиться и ввести своё слово.
-                Ведущий может пытаться отбить контакт («Это не...») или нажать <strong>«Сдаюсь»</strong>, чтобы не ждать 10 секунд.
+                Ведущий может отбить намёк <strong>сразу же</strong> («Это не...»).
+                Если другой игрок понял намёк, он нажимает <strong>«КОНТАКТ!»</strong> и сразу пишет отгадку.
+                Идет 10 секунд — другие игроки тоже могут поддержать контакт своим словом. Ведущий может отбивать («Это не...») или нажать <strong>«Сдаюсь»</strong>.
               </p>
             </div>
           </div>
@@ -80,25 +79,30 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
             <div>
               <h4 className="font-bold text-white mb-1">4. Сверка слов и правило ошибки</h4>
               <p>
-                Когда таймер истекает или ведущий сдается, слова автора и всех поддержавших игроков мгновенно сверяются:
+                После отсчёта слова автора и всех поддержавших игроков мгновенно сверяются:
                 <br />
-                • Если <strong>все игроки</strong> назвали правильное слово автора — ведущий обязан открыть следующую букву!
+                • Если <strong>все игроки</strong> назвали правильное слово автора — открывается следующая буква!
                 <br />
-                • Если <strong>хотя бы один игрок ошибся</strong> (назвал другое слово) — контакт провален, буква не открывается!
+                • Если <strong>хотя бы один игрок ошибся</strong> — контакт провален, буква не открывается!
               </p>
             </div>
           </div>
 
           {/* Rule 5 */}
           <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 flex gap-3">
-            <div className="w-8 h-8 rounded-xl bg-yellow-500/20 text-yellow-300 flex items-center justify-center shrink-0 mt-0.5">
-              <Trophy className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+              <Medal className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="font-bold text-white mb-1">5. Победа</h4>
-              <p>
-                Игроки побеждают, когда откроются все буквы тайного слова, либо если кто-то угадает всё слово целиком через «Прямую угадайку»!
-              </p>
+              <h4 className="font-bold text-white mb-1">5. Система начисления баллов</h4>
+              <ul className="list-disc pl-4 space-y-1 text-slate-300 mt-1.5">
+                <li><strong>+10 очков</strong> автору за успешный контакт.</li>
+                <li><strong>+10 очков</strong> первому партнёру за контакт.</li>
+                <li><strong>+5 очков</strong> каждому игроку, поддержавшему контакт.</li>
+                <li><strong>+10 очков</strong> ведущему за отбитие намёка.</li>
+                <li><strong>+5 очков</strong> ведущему, если контакт игроков провалился.</li>
+                <li><strong>+25 очков</strong> за прямую угадайку всего тайного слова целиком!</li>
+              </ul>
             </div>
           </div>
         </div>

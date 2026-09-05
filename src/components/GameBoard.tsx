@@ -10,8 +10,9 @@ import { Crown, Gamepad2, Users } from 'lucide-react';
 interface GameBoardProps {
   room: Room;
   currentUser: Player;
-  onAskQuestion: (text: string, intendedWord: string) => Promise<void>;
+  onAskQuestion: (intendedWord: string) => Promise<void>;
   onCancelQuestion: () => Promise<void>;
+  onSkipTurn: () => Promise<void>;
   onDeclareContact: (partnerWord: string) => Promise<void>;
   onJoinContact: (word: string) => Promise<void>;
   onHostGiveUp: () => Promise<void>;
@@ -27,6 +28,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   currentUser,
   onAskQuestion,
   onCancelQuestion,
+  onSkipTurn,
   onDeclareContact,
   onJoinContact,
   onHostGiveUp,
@@ -60,6 +62,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             currentUser={currentUser}
             onAskQuestion={onAskQuestion}
             onCancelQuestion={onCancelQuestion}
+            onSkipTurn={onSkipTurn}
             onDeclareContact={onDeclareContact}
             onJoinContact={onJoinContact}
             onHostGiveUp={onHostGiveUp}
@@ -89,13 +92,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                 const isQuestionAuthor = room.currentQuestion?.authorId === p.id;
                 const isContactPartner = room.contactData?.partnerId === p.id;
                 const isAdditionalPartner = room.contactData?.additionalPartners?.some((ap) => ap.id === p.id);
+                const isTurnPlayer = room.activePlayerId === p.id && !room.currentQuestion;
 
                 return (
                   <div
                     key={p.id}
-                    className={`px-2.5 py-1.5 rounded-xl border text-xs flex items-center gap-1.5 transition-all ${
+                    className={`px-3 py-1.5 rounded-xl border text-xs flex items-center gap-2 transition-all ${
                       p.role === 'host'
                         ? 'bg-amber-950/40 border-amber-600/30 text-amber-300'
+                        : isTurnPlayer
+                        ? 'bg-gradient-to-r from-indigo-950/90 to-purple-950/90 border-indigo-400 shadow-md shadow-indigo-500/20 text-indigo-200 ring-1 ring-indigo-400/50'
                         : isMe
                         ? 'bg-indigo-950/60 border-indigo-500/50 text-indigo-200'
                         : 'bg-slate-900/60 border-slate-800 text-slate-300'
@@ -111,7 +117,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       {p.name} {isMe && '(Вы)'}
                     </span>
 
-                    {/* Role / Status mini tags */}
+                    {/* Score Badge */}
+                    <span className="px-1.5 py-0.5 rounded-md bg-slate-950/80 text-[10px] font-mono font-bold text-amber-300 border border-amber-500/20" title="Баллы игрока">
+                      {p.score || 0}
+                    </span>
+
+                    {/* Status indicator tags */}
+                    {isTurnPlayer && (
+                      <span className="text-[10px] text-indigo-300 font-bold">Ходит</span>
+                    )}
                     {isQuestionAuthor && (
                       <span className="w-2 h-2 rounded-full bg-indigo-400" title="Автор вопроса" />
                     )}

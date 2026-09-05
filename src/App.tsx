@@ -66,6 +66,7 @@ export function App() {
     startGame,
     askQuestion,
     cancelQuestion,
+    skipTurn,
     declareContact,
     joinContact,
     hostGiveUp,
@@ -174,6 +175,7 @@ export function App() {
             currentUser={currentUser!}
             onAskQuestion={askQuestion}
             onCancelQuestion={cancelQuestion}
+            onSkipTurn={skipTurn}
             onDeclareContact={declareContact}
             onJoinContact={joinContact}
             onHostGiveUp={hostGiveUp}

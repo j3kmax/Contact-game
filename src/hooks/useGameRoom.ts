@@ -11,6 +11,48 @@ function normalizeWord(str: string): string {
     .replace(/[^а-яa-z0-9]/gi, '');
 }
 
+// Helper to advance the turn to the next player
+function getNextTurn(room: Room): { activePlayerId: string | null; turnOrder: string[] } {
+  const currentPlayers = Object.values(room.players || {}).filter((p) => p.role === 'player');
+  const playerIds = currentPlayers.map((p) => p.id);
+  if (playerIds.length === 0) {
+    return { activePlayerId: null, turnOrder: [] };
+  }
+
+  // Preserve existing order, filter out players who left, add newly joined players
+  const existingOrder = (room.turnOrder || []).filter((id) => playerIds.includes(id));
+  for (const id of playerIds) {
+    if (!existingOrder.includes(id)) {
+      existingOrder.push(id);
+    }
+  }
+
+  const currentActive = room.activePlayerId;
+  const currentIndex = existingOrder.indexOf(currentActive || '');
+  const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % existingOrder.length : 0;
+  return {
+    activePlayerId: existingOrder[nextIndex] || null,
+    turnOrder: existingOrder,
+  };
+}
+
+// Helper to award points
+function awardPoints(
+  players: Record<string, Player>,
+  deltas: Record<string, number>
+): Record<string, Player> {
+  const nextPlayers = { ...players };
+  for (const [id, delta] of Object.entries(deltas)) {
+    if (nextPlayers[id]) {
+      nextPlayers[id] = {
+        ...nextPlayers[id],
+        score: Math.max(0, (nextPlayers[id].score || 0) + delta),
+      };
+    }
+  }
+  return nextPlayers;
+}
+
 export function useGameRoom(roomId: string | null) {
   const [room, setRoom] = useState<Room | null>(null);
   const [currentUser, setCurrentUser] = useState<Player | null>(() => {
@@ -155,6 +197,11 @@ export function useGameRoom(roomId: string | null) {
         throw new Error('Слово должно состоять только из русских букв (минимум 3 буквы)');
       }
 
+      const playerIds = Object.values(room.players || {})
+        .filter((p) => p.role === 'player')
+        .map((p) => p.id);
+      const initialActivePlayerId = playerIds.length > 0 ? playerIds[0] : null;
+
       const firstLetter = cleanWord[0];
       const updates: Partial<Room> = {
         secretWord: cleanWord,
@@ -163,6 +210,8 @@ export function useGameRoom(roomId: string | null) {
         currentQuestion: null,
         contactData: null,
         submissions: {},
+        activePlayerId: initialActivePlayerId,
+        turnOrder: playerIds,
         winner: null,
         historyLog: addLog(
           room.historyLog,
@@ -177,9 +226,9 @@ export function useGameRoom(roomId: string | null) {
     [room, roomId, currentUser, addLog]
   );
 
-  // 3. Ask Question (Players only)
+  // 3. Ask Question (Voice hint in Discord, single secret intended word input)
   const askQuestion = useCallback(
-    async (text: string, intendedWord: string) => {
+    async (intendedWord: string, text?: string) => {
       if (!room || !roomId || !currentUser) return;
       if (currentUser.role === 'host') {
         throw new Error('Ведущий не может задавать вопросы');
@@ -188,12 +237,13 @@ export function useGameRoom(roomId: string | null) {
         throw new Error('Сейчас нельзя задать вопрос');
       }
 
-      const cleanText = text.trim();
-      const cleanIntended = intendedWord.trim().toUpperCase();
-
-      if (!cleanText) {
-        throw new Error('Пожалуйста, введите ваш намёк');
+      // Check turn: only activePlayer can ask if activePlayerId is set
+      if (room.activePlayerId && room.activePlayerId !== currentUser.id) {
+        const activePlayerName = room.players?.[room.activePlayerId]?.name || 'другого игрока';
+        throw new Error(`Сейчас очередь загадывать намёк у игрока ${activePlayerName}`);
       }
+
+      const cleanIntended = intendedWord.trim().toUpperCase();
       if (!cleanIntended || cleanIntended.length < 2) {
         throw new Error('Пожалуйста, укажите загаданное вами слово (секретно)');
       }
@@ -204,6 +254,8 @@ export function useGameRoom(roomId: string | null) {
       if (!normIntended.startsWith(revealedPrefix)) {
         throw new Error(`Задуманное слово должно начинаться на открытые буквы: «${revealedPrefix.toUpperCase()}»`);
       }
+
+      const cleanText = (text && text.trim()) || 'Голосовой намёк в Discord';
 
       const updates: Partial<Room> = {
         currentQuestion: {
@@ -220,7 +272,7 @@ export function useGameRoom(roomId: string | null) {
         },
         historyLog: addLog(
           room.historyLog,
-          `${currentUser.name} задал вопрос: «${cleanText}»`,
+          `🎙️ ${currentUser.name} загадал слово и озвучивает намёк в Discord!`,
           'question',
           currentUser.name
         ),
@@ -242,16 +294,53 @@ export function useGameRoom(roomId: string | null) {
       return;
     }
 
+    const { activePlayerId, turnOrder } = getNextTurn(room);
+    const nextName = activePlayerId ? (room.players?.[activePlayerId]?.name || 'следующего игрока') : 'следующего игрока';
+
     const updates: Partial<Room> = {
       currentQuestion: null,
       contactData: null,
       lastDeflectAttempt: null,
       submissions: {},
       status: 'QUESTION_PHASE',
-      historyLog: addLog(room.historyLog, `Вопрос был отменен`, 'info'),
+      activePlayerId,
+      turnOrder,
+      historyLog: addLog(
+        room.historyLog,
+        `Вопрос был отменен. Очередь переходит к ${nextName}.`,
+        'info'
+      ),
     };
 
     await gameStorage.updateRoom(roomId, updates);
+  }, [room, roomId, currentUser, addLog]);
+
+  // 4b. Skip Turn (Active player passes turn to next player)
+  const skipTurn = useCallback(async () => {
+    if (!room || !roomId || !currentUser) return;
+    if (room.status !== 'QUESTION_PHASE' || room.currentQuestion) {
+      throw new Error('Нельзя пропустить ход во время активного вопроса или контакта');
+    }
+    if (currentUser.role !== 'host' && room.activePlayerId && room.activePlayerId !== currentUser.id) {
+      throw new Error('Только текущий активный игрок или ведущий может пропустить ход');
+    }
+
+    const { activePlayerId, turnOrder } = getNextTurn(room);
+    const nextName = activePlayerId ? (room.players?.[activePlayerId]?.name || 'следующего игрока') : 'следующего игрока';
+
+    const updates: Partial<Room> = {
+      activePlayerId,
+      turnOrder,
+      historyLog: addLog(
+        room.historyLog,
+        `⏭️ ${currentUser.name} передал свой ход. Теперь очередь загадывать у ${nextName}.`,
+        'info',
+        currentUser.name
+      ),
+    };
+
+    await gameStorage.updateRoom(roomId, updates);
+    sounds.playPop();
   }, [room, roomId, currentUser, addLog]);
 
   // Auto-recover from stuck VERIFY_MATCH state
@@ -393,15 +482,24 @@ export function useGameRoom(roomId: string | null) {
 
       if (isExactMatch) {
         // EXACT HIT: Deflect succeeded!
+        const scoreDeltas: Record<string, number> = {};
+        scoreDeltas[currentUser.id] = 10; // host gets +10 points
+        const updatedPlayers = awardPoints(room.players || {}, scoreDeltas);
+        const { activePlayerId, turnOrder } = getNextTurn(room);
+        const nextName = activePlayerId ? (room.players?.[activePlayerId]?.name || 'следующего игрока') : 'следующего игрока';
+
         const updates: Partial<Room> = {
           status: 'QUESTION_PHASE',
           currentQuestion: null,
           contactData: null,
           lastDeflectAttempt: null,
           submissions: {},
+          players: updatedPlayers,
+          activePlayerId,
+          turnOrder,
           historyLog: addLog(
             room.historyLog,
-            `🛡️ Ведущий отгадал задуманное слово: «Это не ${deflectWord.toUpperCase()}»! Вопрос снят.`,
+            `🛡️ Ведущий отгадал задуманное слово: «Это не ${deflectWord.toUpperCase()}»! (+10 очков ведущему) Вопрос снят. Очередь переходит к ${nextName}.`,
             'deflect'
           ),
         };
@@ -443,15 +541,26 @@ export function useGameRoom(roomId: string | null) {
     }
     const deflectWord = room.lastDeflectAttempt?.word || 'слово ведущего';
 
+    const scoreDeltas: Record<string, number> = {};
+    if (room.hostId) {
+      scoreDeltas[room.hostId] = 10;
+    }
+    const updatedPlayers = awardPoints(room.players || {}, scoreDeltas);
+    const { activePlayerId, turnOrder } = getNextTurn(room);
+    const nextName = activePlayerId ? (room.players?.[activePlayerId]?.name || 'следующего игрока') : 'следующего игрока';
+
     const updates: Partial<Room> = {
       status: 'QUESTION_PHASE',
       currentQuestion: null,
       contactData: null,
       lastDeflectAttempt: null,
       submissions: {},
+      players: updatedPlayers,
+      activePlayerId,
+      turnOrder,
       historyLog: addLog(
         room.historyLog,
-        `🤝 Автор вопроса подтвердил, что «${deflectWord}» подходит! Вопрос снят.`,
+        `🤝 Автор вопроса подтвердил, что «${deflectWord}» подходит! (+10 очков ведущему) Вопрос снят. Очередь переходит к ${nextName}.`,
         'deflect'
       ),
     };
@@ -465,12 +574,15 @@ export function useGameRoom(roomId: string | null) {
     if (!room || !roomId) return;
     if (room.status !== 'CONTACT_DECLARED') return;
     if (!room.currentQuestion || !room.contactData) {
+      const { activePlayerId, turnOrder } = getNextTurn(room);
       await gameStorage.updateRoom(roomId, {
         status: 'QUESTION_PHASE',
         currentQuestion: null,
         contactData: null,
         submissions: {},
         lastDeflectAttempt: null,
+        activePlayerId,
+        turnOrder,
       });
       return;
     }
@@ -510,7 +622,18 @@ export function useGameRoom(roomId: string | null) {
       const isGameOver = nextCount >= room.secretWord.length;
       const revealedLetter = room.secretWord[nextCount - 1];
 
-      let logMsg = `🎉 КОНТАКТ УСПЕШЕН! Все игроки назвали слово «${authorWord.toUpperCase()}» (${detailsList.join(', ')})! Открыта буква: «${revealedLetter}»!`;
+      // Points: Author +10, Primary Partner +10, Additional Partners +5 each
+      const scoreDeltas: Record<string, number> = {};
+      scoreDeltas[authorId] = (scoreDeltas[authorId] || 0) + 10;
+      scoreDeltas[primaryPartnerId] = (scoreDeltas[primaryPartnerId] || 0) + 10;
+      for (const p of room.contactData.additionalPartners || []) {
+        scoreDeltas[p.id] = (scoreDeltas[p.id] || 0) + 5;
+      }
+      const updatedPlayers = awardPoints(room.players || {}, scoreDeltas);
+      const { activePlayerId, turnOrder } = getNextTurn(room);
+      const nextName = activePlayerId ? (room.players?.[activePlayerId]?.name || 'следующего игрока') : 'следующего игрока';
+
+      let logMsg = `🎉 КОНТАКТ УСПЕШЕН! Все игроки назвали слово «${authorWord.toUpperCase()}» (${detailsList.join(', ')})! Открыта буква: «${revealedLetter}»! Автор (+10), Партнёр (+10)${(room.contactData.additionalPartners || []).length > 0 ? ', Поддержавшие (+5)' : ''}. Очередь переходит к ${nextName}.`;
       if (isGameOver) {
         logMsg = `🏆 ПОБЕДА ИГРОКОВ! Открыто всё слово: «${room.secretWord}»!`;
       }
@@ -523,6 +646,9 @@ export function useGameRoom(roomId: string | null) {
         contactData: null,
         submissions: {},
         lastDeflectAttempt: null,
+        players: updatedPlayers,
+        activePlayerId,
+        turnOrder,
         historyLog: addLog(room.historyLog, logMsg, 'match'),
       };
 
@@ -533,8 +659,16 @@ export function useGameRoom(roomId: string | null) {
         sounds.playSuccess();
       }
     } else {
-      // MISMATCH!
-      const failMsg = `❌ Контакт провален! Автор загадал «${authorWord.toUpperCase()}», но ответы игроков не совпали (${detailsList.join(', ')}). По правилам, если кто-то ошибся, контакт не засчитывается! Буква не открыта.`;
+      // MISMATCH! Host gets +5 points
+      const scoreDeltas: Record<string, number> = {};
+      if (room.hostId) {
+        scoreDeltas[room.hostId] = 5;
+      }
+      const updatedPlayers = awardPoints(room.players || {}, scoreDeltas);
+      const { activePlayerId, turnOrder } = getNextTurn(room);
+      const nextName = activePlayerId ? (room.players?.[activePlayerId]?.name || 'следующего игрока') : 'следующего игрока';
+
+      const failMsg = `❌ Контакт провален! Автор загадал «${authorWord.toUpperCase()}», но ответы игроков разошлись (${detailsList.join(', ')}). Ведущий получает +5 очков. Буква не открыта. Очередь переходит к ${nextName}.`;
 
       const updates: Partial<Room> = {
         status: 'QUESTION_PHASE',
@@ -542,6 +676,9 @@ export function useGameRoom(roomId: string | null) {
         contactData: null,
         submissions: {},
         lastDeflectAttempt: null,
+        players: updatedPlayers,
+        activePlayerId,
+        turnOrder,
         historyLog: addLog(room.historyLog, failMsg, 'mismatch'),
       };
 
@@ -576,14 +713,19 @@ export function useGameRoom(roomId: string | null) {
       const cleanSecret = normalizeWord(room.secretWord);
 
       if (cleanGuess === cleanSecret) {
-        // Player won!
+        // Player won! +25 points
+        const scoreDeltas: Record<string, number> = {};
+        scoreDeltas[currentUser.id] = 25;
+        const updatedPlayers = awardPoints(room.players || {}, scoreDeltas);
+
         const updates: Partial<Room> = {
           revealedLettersCount: room.secretWord.length,
           status: 'GAME_OVER',
           winner: 'players',
+          players: updatedPlayers,
           historyLog: addLog(
             room.historyLog,
-            `🌟 БИНГО! ${currentUser.name} назвал слово целиком: «${room.secretWord}»! ПОБЕДА ИГРОКОВ!`,
+            `🌟 БИНГО! ${currentUser.name} назвал слово целиком: «${room.secretWord}»! (+25 очков!) ПОБЕДА ИГРОКОВ!`,
             'win',
             currentUser.name
           ),
@@ -616,6 +758,10 @@ export function useGameRoom(roomId: string | null) {
       throw new Error('Только ведущий может перезапустить игру');
     }
 
+    const playerIds = Object.values(room.players || {})
+      .filter((p) => p.role === 'player')
+      .map((p) => p.id);
+
     const updates: Partial<Room> = {
       status: 'LOBBY',
       secretWord: '',
@@ -623,6 +769,8 @@ export function useGameRoom(roomId: string | null) {
       currentQuestion: null,
       contactData: null,
       submissions: {},
+      activePlayerId: playerIds[0] || null,
+      turnOrder: playerIds,
       winner: null,
       historyLog: addLog(room.historyLog, `Ведущий вернул игру в лобби для нового раунда.`, 'info'),
     };
@@ -639,6 +787,7 @@ export function useGameRoom(roomId: string | null) {
     startGame,
     askQuestion,
     cancelQuestion,
+    skipTurn,
     declareContact,
     joinContact,
     hostGiveUp,

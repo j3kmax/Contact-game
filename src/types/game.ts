@@ -11,6 +11,7 @@ export interface Player {
   id: string;
   name: string;
   role: PlayerRole;
+  score?: number;
   isOnline?: boolean;
   joinedAt?: number;
 }
@@ -18,7 +19,7 @@ export interface Player {
 export interface Question {
   authorId: string;
   authorName: string;
-  text: string;
+  text?: string;
   intendedWord?: string; // Secret word intended by the author
   createdAt?: number;
 }
@@ -71,6 +72,8 @@ export interface Room {
   lastDeflectAttempt?: DeflectAttempt | null;
   submissions: Record<string, string>; // playerId -> word
   historyLog: HistoryItem[];
+  activePlayerId?: string | null;
+  turnOrder?: string[];
   winner?: 'players' | 'host' | null;
   createdAt: number;
   updatedAt?: number;
