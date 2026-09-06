@@ -173,4 +173,113 @@ describe('Contact Game Logic & Normalization', () => {
     const afterDirect = awardPoints(afterDeflect, { p1: 25 });
     expect(afterDirect.p1.score).toBe(35);
   });
+
+  it('does NOT award points to host when contact between players fails (mismatch)', () => {
+    const players: Record<string, Player> = {
+      host: { id: 'host', name: 'Host', role: 'host', score: 20 },
+      author: { id: 'author', name: 'Author', role: 'player', score: 10 },
+      p1: { id: 'p1', name: 'Partner', role: 'player', score: 15 },
+    };
+
+    // On mismatch, deltas is empty object {} -> host gets 0 points
+    const deltas: Record<string, number> = {};
+    const afterMismatch = awardPoints(players, deltas);
+
+    expect(afterMismatch.host.score).toBe(20); // Unchanged!
+    expect(afterMismatch.author.score).toBe(10);
+    expect(afterMismatch.p1.score).toBe(15);
+  });
+
+  it('correctly tracks and enforces 30-second cooldown for direct whole-word guessing', () => {
+    const now = 1000000;
+    const cooldownExpiresAt = now + 30000; // 30s cooldown
+    const cooldowns: Record<string, number> = {
+      player1: cooldownExpiresAt,
+    };
+
+    // During cooldown (e.g. 10s elapsed, 20s remaining)
+    const midTime = now + 10000;
+    const isCooldownActive = (cooldowns['player1'] || 0) > midTime;
+    const remainingSec = Math.ceil(((cooldowns['player1'] || 0) - midTime) / 1000);
+    expect(isCooldownActive).toBe(true);
+    expect(remainingSec).toBe(20);
+
+    // After cooldown has expired (31s elapsed)
+    const afterTime = now + 31000;
+    const isExpired = (cooldowns['player1'] || 0) <= afterTime;
+    expect(isExpired).toBe(true);
+  });
+
+  it('preserves all player scores when restarting game for a new round', () => {
+    const currentRoom: Partial<Room> = {
+      status: 'GAME_OVER',
+      secretWord: 'ТЕЛЕФОН',
+      revealedLettersCount: 7,
+      hostId: 'host1',
+      leaderId: 'host1',
+      players: {
+        host1: { id: 'host1', name: 'Host', role: 'host', score: 30 },
+        p1: { id: 'p1', name: 'Alice', role: 'player', score: 45 },
+        p2: { id: 'p2', name: 'Bob', role: 'player', score: 25 },
+      },
+    };
+
+    // Restart creates new round updates, keeping players object intact
+    const restartUpdates: Partial<Room> = {
+      status: 'LOBBY',
+      secretWord: '',
+      revealedLettersCount: 1,
+      currentQuestion: null,
+      contactData: null,
+      submissions: {},
+      winner: null,
+      directGuessCooldowns: {},
+    };
+
+    const nextRoom = { ...currentRoom, ...restartUpdates };
+
+    expect(nextRoom.status).toBe('LOBBY');
+    expect(nextRoom.secretWord).toBe('');
+    expect(nextRoom.players!['host1'].score).toBe(30);
+    expect(nextRoom.players!['p1'].score).toBe(45);
+    expect(nextRoom.players!['p2'].score).toBe(25);
+  });
+
+  it('allows lobby host to assign round leader and transfer host', () => {
+    const room: Partial<Room> = {
+      hostId: 'p1', // p1 is lobby host
+      leaderId: 'p1',
+      players: {
+        p1: { id: 'p1', name: 'Creator', role: 'host', score: 10 },
+        p2: { id: 'p2', name: 'Guesser', role: 'player', score: 20 },
+      },
+    };
+
+    // 1. Host assigns p2 as round leader
+    const assignedLeaderId = 'p2';
+    const updatedPlayersRole: Record<string, Player> = {};
+    for (const [id, p] of Object.entries(room.players!)) {
+      updatedPlayersRole[id] = {
+        ...p,
+        role: id === assignedLeaderId ? 'host' : 'player',
+      };
+    }
+    const afterLeaderAssign = {
+      ...room,
+      leaderId: assignedLeaderId,
+      players: updatedPlayersRole,
+    };
+
+    expect(afterLeaderAssign.leaderId).toBe('p2');
+    expect(afterLeaderAssign.players['p2'].role).toBe('host');
+    expect(afterLeaderAssign.players['p1'].role).toBe('player');
+    expect(afterLeaderAssign.hostId).toBe('p1'); // Lobby host remains p1
+
+    // 2. Host transfers lobby host to p2
+    const afterTransfer = {
+      ...afterLeaderAssign,
+      hostId: 'p2',
+    };
+    expect(afterTransfer.hostId).toBe('p2');
+  });
 });

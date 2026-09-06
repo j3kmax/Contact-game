@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Room, Player, HistoryItem, GameStatus } from '../types/game';
+import { Room, Player, HistoryItem, GameStatus, PlayerRole } from '../types/game';
 import { gameStorage } from '../services/gameStorage';
 import { sounds } from '../services/sound';
 
@@ -11,9 +11,10 @@ function normalizeWord(str: string): string {
     .replace(/[^а-яa-z0-9]/gi, '');
 }
 
-// Helper to advance the turn to the next player
+// Helper to advance the turn to the next player (excluding round leader)
 function getNextTurn(room: Room): { activePlayerId: string | null; turnOrder: string[] } {
-  const currentPlayers = Object.values(room.players || {}).filter((p) => p.role === 'player');
+  const leaderId = room.leaderId || room.hostId;
+  const currentPlayers = Object.values(room.players || {}).filter((p) => p.id !== leaderId);
   const playerIds = currentPlayers.map((p) => p.id);
   if (playerIds.length === 0) {
     return { activePlayerId: null, turnOrder: [] };
@@ -88,6 +89,16 @@ export function useGameRoom(roomId: string | null) {
     return () => unsubscribe();
   }, [roomId]);
 
+  // If user was kicked from room, clear local state
+  useEffect(() => {
+    if (room && currentUser && room.players && !room.players[currentUser.id]) {
+      setCurrentUser(null);
+      if (roomId) {
+        localStorage.removeItem(`contact_player_${roomId}`);
+      }
+    }
+  }, [room, currentUser, roomId]);
+
   // Save current player to localStorage
   const persistUser = (player: Player) => {
     setCurrentUser(player);
@@ -113,26 +124,30 @@ export function useGameRoom(roomId: string | null) {
 
   // 1. Join / Create Room
   const joinRoom = useCallback(
-    async (name: string, role: 'host' | 'player') => {
+    async (name: string, requestedRole: 'host' | 'player' = 'player') => {
       if (!roomId) return;
 
       const trimmedName = name.trim();
       if (!trimmedName) throw new Error('Пожалуйста, введите ваше имя');
 
       const existingPlayerId = currentUser?.id || `p_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-      const player: Player = {
-        id: existingPlayerId,
-        name: trimmedName,
-        role: role,
-        isOnline: true,
-        joinedAt: Date.now(),
-      };
+      const existingScore = room?.players?.[existingPlayerId]?.score || 0;
 
       if (!room) {
-        // First user creates room
+        // First user creates room -> becomes Lobby Host AND initial Round Leader
+        const player: Player = {
+          id: existingPlayerId,
+          name: trimmedName,
+          role: 'host',
+          score: 0,
+          isOnline: true,
+          joinedAt: Date.now(),
+        };
+
         const newRoom: Room = {
           roomId,
-          hostId: role === 'host' ? player.id : '',
+          hostId: player.id,
+          leaderId: player.id,
           secretWord: '',
           revealedLettersCount: 1,
           status: 'LOBBY',
@@ -146,50 +161,218 @@ export function useGameRoom(roomId: string | null) {
             {
               id: `log_init_${Date.now()}`,
               timestamp: Date.now(),
-              text: `Комната создана игроком ${trimmedName} (${role === 'host' ? 'Ведущий' : 'Игрок'})`,
+              text: `Комната создана игроком ${trimmedName} (Хост лобби)`,
               type: 'info',
             },
           ],
           createdAt: Date.now(),
         };
         await gameStorage.saveRoom(roomId, newRoom);
-      } else {
-        // Room exists: update or join
-        const updatedPlayers = {
-          ...room.players,
-          [player.id]: player,
-        };
-
-        const updates: Partial<Room> = {
-          players: updatedPlayers,
-        };
-
-        if (role === 'host' && (!room.hostId || !room.players[room.hostId])) {
-          updates.hostId = player.id;
-        }
-
-        const newLogs = addLog(
-          room.historyLog,
-          `${trimmedName} вошел в игру как ${role === 'host' ? 'Ведущий' : 'Игрок'}`,
-          'info'
-        );
-        updates.historyLog = newLogs;
-
-        await gameStorage.updateRoom(roomId, updates);
+        persistUser(player);
+        sounds.playPop();
+        return;
       }
 
+      // Room exists:
+      // If player is leader, role is 'host', otherwise 'player'
+      const effectiveLeaderId = room.leaderId || room.hostId;
+      const isLeader = existingPlayerId === effectiveLeaderId;
+      const actualRole: PlayerRole = isLeader ? 'host' : requestedRole === 'host' && !room.hostId ? 'host' : 'player';
+
+      const player: Player = {
+        id: existingPlayerId,
+        name: trimmedName,
+        role: actualRole,
+        score: existingScore,
+        isOnline: true,
+        joinedAt: Date.now(),
+      };
+
+      const updatedPlayers = {
+        ...room.players,
+        [player.id]: player,
+      };
+
+      const updates: Partial<Room> = {
+        players: updatedPlayers,
+      };
+
+      if (!room.hostId || !room.players[room.hostId]) {
+        updates.hostId = player.id;
+        updates.leaderId = player.id;
+        player.role = 'host';
+        updatedPlayers[player.id] = player;
+      } else if (!room.leaderId) {
+        updates.leaderId = room.hostId;
+      }
+
+      const newLogs = addLog(
+        room.historyLog,
+        `${trimmedName} вошел в игру${player.role === 'host' ? ' (Ведущий)' : ''}`,
+        'info'
+      );
+      updates.historyLog = newLogs;
+
+      await gameStorage.updateRoom(roomId, updates);
       persistUser(player);
       sounds.playPop();
     },
     [roomId, room, currentUser, addLog]
   );
 
-  // 2. Start Game (Host only)
+  // 1b. Kick Player (Lobby Host only)
+  const kickPlayer = useCallback(
+    async (playerId: string) => {
+      if (!room || !roomId || !currentUser) return;
+      if (room.hostId !== currentUser.id) {
+        throw new Error('Только создатель (хост) лобби может исключать игроков');
+      }
+      if (playerId === currentUser.id) {
+        throw new Error('Хост не может исключить сам себя');
+      }
+
+      const kickedName = room.players?.[playerId]?.name || 'Игрок';
+      const updatedPlayers = { ...room.players };
+      delete updatedPlayers[playerId];
+
+      const newTurnOrder = (room.turnOrder || []).filter((id) => id !== playerId);
+      let newActivePlayerId = room.activePlayerId;
+      if (newActivePlayerId === playerId) {
+        newActivePlayerId = newTurnOrder[0] || null;
+      }
+
+      const updates: Partial<Room> = {
+        players: updatedPlayers,
+        turnOrder: newTurnOrder,
+        activePlayerId: newActivePlayerId,
+      };
+
+      // If kicked player was leader, reassign leader to host
+      if (room.leaderId === playerId) {
+        updates.leaderId = room.hostId;
+        if (updatedPlayers[room.hostId]) {
+          updatedPlayers[room.hostId] = {
+            ...updatedPlayers[room.hostId],
+            role: 'host',
+          };
+        }
+      }
+
+      // If kicked player had active question, cancel question
+      if (room.currentQuestion?.authorId === playerId) {
+        updates.currentQuestion = null;
+        updates.contactData = null;
+        updates.status = 'QUESTION_PHASE';
+      }
+
+      // If kicked player was primary contact partner
+      if (room.contactData?.partnerId === playerId) {
+        updates.contactData = null;
+        updates.status = 'QUESTION_PHASE';
+      } else if (room.contactData?.additionalPartners?.some((p) => p.id === playerId)) {
+        updates.contactData = {
+          ...room.contactData,
+          additionalPartners: room.contactData.additionalPartners.filter((p) => p.id !== playerId),
+        };
+      }
+
+      // Clean submissions
+      if (room.submissions?.[playerId]) {
+        const newSubs = { ...room.submissions };
+        delete newSubs[playerId];
+        updates.submissions = newSubs;
+      }
+
+      // Clean cooldowns
+      if (room.directGuessCooldowns?.[playerId]) {
+        const newCooldowns = { ...room.directGuessCooldowns };
+        delete newCooldowns[playerId];
+        updates.directGuessCooldowns = newCooldowns;
+      }
+
+      updates.historyLog = addLog(
+        room.historyLog,
+        `🚫 Хост исключил игрока ${kickedName} из комнаты.`,
+        'info'
+      );
+
+      await gameStorage.updateRoom(roomId, updates);
+      sounds.playPop();
+    },
+    [room, roomId, currentUser, addLog]
+  );
+
+  // 1c. Transfer Lobby Host (Host only)
+  const transferLobbyHost = useCallback(
+    async (newHostId: string) => {
+      if (!room || !roomId || !currentUser) return;
+      if (room.hostId !== currentUser.id) {
+        throw new Error('Только текущий хост может передать права управления');
+      }
+      if (!room.players?.[newHostId]) {
+        throw new Error('Выбранный игрок не найден в комнате');
+      }
+
+      const targetName = room.players[newHostId].name;
+      const updates: Partial<Room> = {
+        hostId: newHostId,
+        historyLog: addLog(
+          room.historyLog,
+          `👑 Права хоста лобби переданы игроку ${targetName}!`,
+          'info'
+        ),
+      };
+
+      await gameStorage.updateRoom(roomId, updates);
+      sounds.playPop();
+    },
+    [room, roomId, currentUser, addLog]
+  );
+
+  // 1d. Assign Round Leader / Word Master (Host only)
+  const setRoundLeader = useCallback(
+    async (newLeaderId: string) => {
+      if (!room || !roomId || !currentUser) return;
+      if (room.hostId !== currentUser.id) {
+        throw new Error('Только хост лобби может назначать ведущего на раунд');
+      }
+      if (!room.players?.[newLeaderId]) {
+        throw new Error('Выбранный игрок не найден в комнате');
+      }
+
+      const updatedPlayers: Record<string, Player> = {};
+      for (const [id, p] of Object.entries(room.players)) {
+        updatedPlayers[id] = {
+          ...p,
+          role: id === newLeaderId ? 'host' : 'player',
+        };
+      }
+
+      const targetName = room.players[newLeaderId].name;
+      const updates: Partial<Room> = {
+        leaderId: newLeaderId,
+        players: updatedPlayers,
+        historyLog: addLog(
+          room.historyLog,
+          `🎯 Ведущим на этот раунд назначен: ${targetName}!`,
+          'info'
+        ),
+      };
+
+      await gameStorage.updateRoom(roomId, updates);
+      sounds.playPop();
+    },
+    [room, roomId, currentUser, addLog]
+  );
+
+  // 2. Start Game (Round Leader or Host)
   const startGame = useCallback(
     async (secretWord: string) => {
       if (!room || !roomId || !currentUser) return;
-      if (currentUser.role !== 'host') {
-        throw new Error('Только ведущий может начать игру');
+      const effectiveLeaderId = room.leaderId || room.hostId;
+      const isLeaderOrHost = currentUser.id === effectiveLeaderId || currentUser.id === room.hostId;
+      if (!isLeaderOrHost) {
+        throw new Error('Только ведущий раунда или хост комнаты может начать игру');
       }
 
       const cleanWord = secretWord.trim().toUpperCase();
@@ -197,12 +380,23 @@ export function useGameRoom(roomId: string | null) {
         throw new Error('Слово должно состоять только из русских букв (минимум 3 буквы)');
       }
 
-      const playerIds = Object.values(room.players || {})
+      // Set roles: effectiveLeaderId is 'host', other players are 'player'
+      const updatedPlayers: Record<string, Player> = {};
+      for (const [id, p] of Object.entries(room.players || {})) {
+        updatedPlayers[id] = {
+          ...p,
+          role: id === effectiveLeaderId ? 'host' : 'player',
+        };
+      }
+
+      const playerIds = Object.values(updatedPlayers)
         .filter((p) => p.role === 'player')
         .map((p) => p.id);
       const initialActivePlayerId = playerIds.length > 0 ? playerIds[0] : null;
 
       const firstLetter = cleanWord[0];
+      const leaderName = updatedPlayers[effectiveLeaderId]?.name || 'Ведущий';
+
       const updates: Partial<Room> = {
         secretWord: cleanWord,
         revealedLettersCount: 1,
@@ -210,12 +404,15 @@ export function useGameRoom(roomId: string | null) {
         currentQuestion: null,
         contactData: null,
         submissions: {},
+        directGuessCooldowns: {},
+        leaderId: effectiveLeaderId,
+        players: updatedPlayers,
         activePlayerId: initialActivePlayerId,
         turnOrder: playerIds,
         winner: null,
         historyLog: addLog(
           room.historyLog,
-          `Ведущий загадал слово из ${cleanWord.length} букв. Первая буква: «${firstLetter}»! Игра началась!`,
+          `🎯 Ведущий (${leaderName}) загадал слово из ${cleanWord.length} букв. Первая буква: «${firstLetter}»! Игра началась!`,
           'info'
         ),
       };
@@ -230,7 +427,8 @@ export function useGameRoom(roomId: string | null) {
   const askQuestion = useCallback(
     async (intendedWord: string, text?: string) => {
       if (!room || !roomId || !currentUser) return;
-      if (currentUser.role === 'host') {
+      const effectiveLeaderId = room.leaderId || room.hostId;
+      if (currentUser.id === effectiveLeaderId) {
         throw new Error('Ведущий не может задавать вопросы');
       }
       if (room.status !== 'QUESTION_PHASE') {
@@ -287,8 +485,10 @@ export function useGameRoom(roomId: string | null) {
   // 4. Cancel Question
   const cancelQuestion = useCallback(async () => {
     if (!room || !roomId || !currentUser) return;
+    const effectiveLeaderId = room.leaderId || room.hostId;
     if (
-      currentUser.role !== 'host' &&
+      currentUser.id !== room.hostId &&
+      currentUser.id !== effectiveLeaderId &&
       room.currentQuestion?.authorId !== currentUser.id
     ) {
       return;
@@ -321,8 +521,14 @@ export function useGameRoom(roomId: string | null) {
     if (room.status !== 'QUESTION_PHASE' || room.currentQuestion) {
       throw new Error('Нельзя пропустить ход во время активного вопроса или контакта');
     }
-    if (currentUser.role !== 'host' && room.activePlayerId && room.activePlayerId !== currentUser.id) {
-      throw new Error('Только текущий активный игрок или ведущий может пропустить ход');
+    const effectiveLeaderId = room.leaderId || room.hostId;
+    if (
+      currentUser.id !== room.hostId &&
+      currentUser.id !== effectiveLeaderId &&
+      room.activePlayerId &&
+      room.activePlayerId !== currentUser.id
+    ) {
+      throw new Error('Только текущий активный игрок, ведущий или хост может пропустить ход');
     }
 
     const { activePlayerId, turnOrder } = getNextTurn(room);
@@ -360,7 +566,8 @@ export function useGameRoom(roomId: string | null) {
   const declareContact = useCallback(
     async (partnerWord: string) => {
       if (!room || !roomId || !currentUser) return;
-      if (currentUser.role === 'host') {
+      const effectiveLeaderId = room.leaderId || room.hostId;
+      if (currentUser.id === effectiveLeaderId) {
         throw new Error('Ведущий не может нажимать Контакт');
       }
       if (room.status !== 'QUESTION_PHASE' || !room.currentQuestion) {
@@ -410,7 +617,8 @@ export function useGameRoom(roomId: string | null) {
   const joinContact = useCallback(
     async (word: string) => {
       if (!room || !roomId || !currentUser) return;
-      if (currentUser.role === 'host') return;
+      const effectiveLeaderId = room.leaderId || room.hostId;
+      if (currentUser.id === effectiveLeaderId) return;
       if (room.status !== 'CONTACT_DECLARED' || !room.contactData) return;
       if (room.currentQuestion?.authorId === currentUser.id) return;
       if (room.contactData.partnerId === currentUser.id) return;
@@ -451,11 +659,12 @@ export function useGameRoom(roomId: string | null) {
     [room, roomId, currentUser, addLog]
   );
 
-  // 6. Host Deflects ("Это не...")
+  // 6. Host / Round Leader Deflects ("Это не...")
   const deflect = useCallback(
     async (deflectWord: string): Promise<{ success: boolean; matched: boolean; error?: string }> => {
       if (!room || !roomId || !currentUser) return { success: false, matched: false, error: 'Нет подключения' };
-      if (currentUser.role !== 'host') {
+      const effectiveLeaderId = room.leaderId || room.hostId;
+      if (currentUser.id !== effectiveLeaderId) {
         return { success: false, matched: false, error: 'Только ведущий может отбивать вопросы' };
       }
       if (!room.currentQuestion) {
@@ -481,9 +690,9 @@ export function useGameRoom(roomId: string | null) {
       const isExactMatch = intended && cleanDeflect === intended;
 
       if (isExactMatch) {
-        // EXACT HIT: Deflect succeeded!
+        // EXACT HIT: Deflect succeeded! +10 points to round leader
         const scoreDeltas: Record<string, number> = {};
-        scoreDeltas[currentUser.id] = 10; // host gets +10 points
+        scoreDeltas[effectiveLeaderId] = 10;
         const updatedPlayers = awardPoints(room.players || {}, scoreDeltas);
         const { activePlayerId, turnOrder } = getNextTurn(room);
         const nextName = activePlayerId ? (room.players?.[activePlayerId]?.name || 'следующего игрока') : 'следующего игрока';
@@ -508,7 +717,7 @@ export function useGameRoom(roomId: string | null) {
         sounds.playDeflect();
         return { success: true, matched: true };
       } else {
-        // MISSED: Host said another word starting with prefix. Contact & timer continue!
+        // MISSED: Host named another word starting with prefix. Contact & timer continue!
         const updates: Partial<Room> = {
           lastDeflectAttempt: {
             word: deflectWord.toUpperCase(),
@@ -539,11 +748,12 @@ export function useGameRoom(roomId: string | null) {
     if (room.currentQuestion?.authorId !== currentUser.id) {
       throw new Error('Только автор вопроса может подтвердить отбитие');
     }
+    const effectiveLeaderId = room.leaderId || room.hostId;
     const deflectWord = room.lastDeflectAttempt?.word || 'слово ведущего';
 
     const scoreDeltas: Record<string, number> = {};
-    if (room.hostId) {
-      scoreDeltas[room.hostId] = 10;
+    if (effectiveLeaderId) {
+      scoreDeltas[effectiveLeaderId] = 10;
     }
     const updatedPlayers = awardPoints(room.players || {}, scoreDeltas);
     const { activePlayerId, turnOrder } = getNextTurn(room);
@@ -659,16 +869,12 @@ export function useGameRoom(roomId: string | null) {
         sounds.playSuccess();
       }
     } else {
-      // MISMATCH! Host gets +5 points
-      const scoreDeltas: Record<string, number> = {};
-      if (room.hostId) {
-        scoreDeltas[room.hostId] = 5;
-      }
-      const updatedPlayers = awardPoints(room.players || {}, scoreDeltas);
+      // MISMATCH!
+      // Notice: Host receives NO points on player contact mismatch as requested
       const { activePlayerId, turnOrder } = getNextTurn(room);
       const nextName = activePlayerId ? (room.players?.[activePlayerId]?.name || 'следующего игрока') : 'следующего игрока';
 
-      const failMsg = `❌ Контакт провален! Автор загадал «${authorWord.toUpperCase()}», но ответы игроков разошлись (${detailsList.join(', ')}). Ведущий получает +5 очков. Буква не открыта. Очередь переходит к ${nextName}.`;
+      const failMsg = `❌ Контакт не состоялся! Автор загадал «${authorWord.toUpperCase()}», но ответы игроков разошлись (${detailsList.join(', ')}). Буква не открыта. Очередь переходит к ${nextName}.`;
 
       const updates: Partial<Room> = {
         status: 'QUESTION_PHASE',
@@ -676,7 +882,6 @@ export function useGameRoom(roomId: string | null) {
         contactData: null,
         submissions: {},
         lastDeflectAttempt: null,
-        players: updatedPlayers,
         activePlayerId,
         turnOrder,
         historyLog: addLog(room.historyLog, failMsg, 'mismatch'),
@@ -690,7 +895,8 @@ export function useGameRoom(roomId: string | null) {
   // Host gives up (skips 10s timer)
   const hostGiveUp = useCallback(async () => {
     if (!room || !roomId || !currentUser) return;
-    if (currentUser.role !== 'host') return;
+    const effectiveLeaderId = room.leaderId || room.hostId;
+    if (currentUser.id !== effectiveLeaderId && currentUser.id !== room.hostId) return;
     if (room.status !== 'CONTACT_DECLARED') return;
 
     await evaluateContact();
@@ -704,10 +910,26 @@ export function useGameRoom(roomId: string | null) {
     await evaluateContact();
   }, [room, roomId, evaluateContact]);
 
-  // 9. Direct Guess (Any player guesses entire word)
+  // 9. Direct Guess (Any player guesses entire word, 1 attempt per 30s)
   const directGuess = useCallback(
-    async (word: string) => {
-      if (!room || !roomId || !currentUser) return { correct: false, message: '' };
+    async (word: string): Promise<{ correct: boolean; message: string }> => {
+      if (!room || !roomId || !currentUser) return { correct: false, message: 'Нет подключения к комнате' };
+
+      const effectiveLeaderId = room.leaderId || room.hostId;
+      if (currentUser.id === effectiveLeaderId) {
+        return { correct: false, message: 'Ведущий не может отгадывать собственное тайное слово' };
+      }
+
+      // Check 30s cooldown
+      const now = Date.now();
+      const cooldownUntil = room.directGuessCooldowns?.[currentUser.id] || 0;
+      if (now < cooldownUntil) {
+        const remainingSec = Math.ceil((cooldownUntil - now) / 1000);
+        return {
+          correct: false,
+          message: `Перезарядка! Подождите еще ${remainingSec} сек. перед следующей попыткой.`,
+        };
+      }
 
       const cleanGuess = normalizeWord(word);
       const cleanSecret = normalizeWord(room.secretWord);
@@ -734,32 +956,40 @@ export function useGameRoom(roomId: string | null) {
         sounds.playWin();
         return { correct: true, message: 'Поздравляем! Вы угадали всё слово!' };
       } else {
-        // Wrong guess
+        // Wrong guess: apply 30-second cooldown
+        const nextCooldowns = {
+          ...(room.directGuessCooldowns || {}),
+          [currentUser.id]: now + 30000,
+        };
+
         const updates: Partial<Room> = {
+          directGuessCooldowns: nextCooldowns,
           historyLog: addLog(
             room.historyLog,
-            `⚠️ ${currentUser.name} попытался назвать всё слово «${word.toUpperCase()}», но не угадал!`,
+            `⚠️ ${currentUser.name} попытался назвать всё слово «${word.toUpperCase()}», но не угадал! (Перезарядка 30 сек.)`,
             'guess',
             currentUser.name
           ),
         };
         await gameStorage.updateRoom(roomId, updates);
         sounds.playFail();
-        return { correct: false, message: `Слово «${word.toUpperCase()}» неверно!` };
+        return { correct: false, message: `Слово «${word.toUpperCase()}» неверно! Перезарядка 30 секунд.` };
       }
     },
     [room, roomId, currentUser, addLog]
   );
 
-  // 10. Restart Game
+  // 10. Restart Game (Lobby Host or Round Leader, keeps accumulated scores)
   const restartGame = useCallback(async () => {
     if (!room || !roomId || !currentUser) return;
-    if (currentUser.role !== 'host') {
-      throw new Error('Только ведущий может перезапустить игру');
+    const effectiveLeaderId = room.leaderId || room.hostId;
+    const isHostOrLeader = currentUser.id === room.hostId || currentUser.id === effectiveLeaderId;
+    if (!isHostOrLeader) {
+      throw new Error('Только хост лобби или ведущий может перезапустить игру');
     }
 
     const playerIds = Object.values(room.players || {})
-      .filter((p) => p.role === 'player')
+      .filter((p) => p.id !== effectiveLeaderId)
       .map((p) => p.id);
 
     const updates: Partial<Room> = {
@@ -769,10 +999,12 @@ export function useGameRoom(roomId: string | null) {
       currentQuestion: null,
       contactData: null,
       submissions: {},
+      lastDeflectAttempt: null,
+      directGuessCooldowns: {},
       activePlayerId: playerIds[0] || null,
       turnOrder: playerIds,
       winner: null,
-      historyLog: addLog(room.historyLog, `Ведущий вернул игру в лобби для нового раунда.`, 'info'),
+      historyLog: addLog(room.historyLog, `Раунд завершен. Игра возвращена в лобби для нового раунда. Баллы сохранены!`, 'info'),
     };
 
     await gameStorage.updateRoom(roomId, updates);
@@ -784,6 +1016,9 @@ export function useGameRoom(roomId: string | null) {
     currentUser,
     loading,
     joinRoom,
+    kickPlayer,
+    transferLobbyHost,
+    setRoundLeader,
     startGame,
     askQuestion,
     cancelQuestion,

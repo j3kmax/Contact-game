@@ -94,14 +94,14 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               <Medal className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="font-bold text-white mb-1">5. Система начисления баллов</h4>
+              <h4 className="font-bold text-white mb-1">5. Система начисления баллов и раунды</h4>
               <ul className="list-disc pl-4 space-y-1 text-slate-300 mt-1.5">
                 <li><strong>+10 очков</strong> автору за успешный контакт.</li>
                 <li><strong>+10 очков</strong> первому партнёру за контакт.</li>
-                <li><strong>+5 очков</strong> каждому игроку, поддержавшему контакт.</li>
-                <li><strong>+10 очков</strong> ведущему за отбитие намёка.</li>
-                <li><strong>+5 очков</strong> ведущему, если контакт игроков провалился.</li>
-                <li><strong>+25 очков</strong> за прямую угадайку всего тайного слова целиком!</li>
+                <li><strong>+5 очков</strong> каждому игроку, верно поддержавшему контакт.</li>
+                <li><strong>+10 очков</strong> ведущему за отбитие намёка («Это не...»).</li>
+                <li><strong>+25 очков</strong> за прямую угадайку всего тайного слова целиком (1 попытка раз в 30 секунд!).</li>
+                <li><strong>Баллы сохраняются</strong> между раундами. Хост лобби может передавать хоста, исключать игроков и назначать ведущего на раунд.</li>
               </ul>
             </div>
           </div>

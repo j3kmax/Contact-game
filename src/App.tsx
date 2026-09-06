@@ -63,6 +63,9 @@ export function App() {
     currentUser,
     loading,
     joinRoom,
+    kickPlayer,
+    transferLobbyHost,
+    setRoundLeader,
     startGame,
     askQuestion,
     cancelQuestion,
@@ -184,6 +187,8 @@ export function App() {
             onTimerExpired={handleTimerExpired}
             onDirectGuess={directGuess}
             onRestartGame={restartGame}
+            onKickPlayer={kickPlayer}
+            onTransferLobbyHost={transferLobbyHost}
           />
         ) : (
           /* Lobby View (Waiting for start / Joining) */
@@ -193,6 +198,9 @@ export function App() {
             roomId={roomId}
             onJoin={joinRoom}
             onStartGame={startGame}
+            onKickPlayer={kickPlayer}
+            onTransferLobbyHost={transferLobbyHost}
+            onSetRoundLeader={setRoundLeader}
           />
         )}
       </main>

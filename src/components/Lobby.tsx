@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Crown, Gamepad2, Play, Users, Copy, Check, Sparkles, AlertCircle } from 'lucide-react';
+import { Crown, Gamepad2, Play, Users, Copy, Check, Sparkles, AlertCircle, UserMinus, Target } from 'lucide-react';
 import { Room, Player, PlayerRole } from '../types/game';
 import { sounds } from '../services/sound';
 
@@ -7,11 +7,23 @@ interface LobbyProps {
   room: Room | null;
   currentUser: Player | null;
   roomId: string;
-  onJoin: (name: string, role: PlayerRole) => Promise<void>;
+  onJoin: (name: string, role?: PlayerRole) => Promise<void>;
   onStartGame: (secretWord: string) => Promise<void>;
+  onKickPlayer?: (playerId: string) => Promise<void>;
+  onTransferLobbyHost?: (newHostId: string) => Promise<void>;
+  onSetRoundLeader?: (leaderId: string) => Promise<void>;
 }
 
-export function Lobby({ room, currentUser, roomId, onJoin, onStartGame }: LobbyProps) {
+export function Lobby({
+  room,
+  currentUser,
+  roomId,
+  onJoin,
+  onStartGame,
+  onKickPlayer,
+  onTransferLobbyHost,
+  onSetRoundLeader,
+}: LobbyProps) {
   const [name, setName] = useState(currentUser?.name || '');
   const [selectedRole, setSelectedRole] = useState<PlayerRole>(currentUser?.role || 'player');
   const [secretWord, setSecretWord] = useState('');
@@ -20,7 +32,11 @@ export function Lobby({ room, currentUser, roomId, onJoin, onStartGame }: LobbyP
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const playersList = room?.players ? Object.values(room.players) : [];
-  const hasHostAlready = playersList.some((p) => p.role === 'host' && p.id !== currentUser?.id);
+  const effectiveLeaderId = room?.leaderId || room?.hostId;
+  const isJoined = !!currentUser && !!room?.players?.[currentUser.id];
+  const isLobbyHost = !!room?.hostId && currentUser?.id === room.hostId;
+  const isLeader = !!currentUser && (currentUser.id === effectiveLeaderId || (!room?.leaderId && isLobbyHost));
+  const currentLeaderName = (effectiveLeaderId && room?.players?.[effectiveLeaderId]?.name) || 'Ведущий';
 
   const handleCopy = () => {
     const url = `${window.location.origin}${window.location.pathname}#room=${roomId}`;
@@ -60,9 +76,6 @@ export function Lobby({ room, currentUser, roomId, onJoin, onStartGame }: LobbyP
     }
   };
 
-  const isJoined = !!currentUser && !!room?.players?.[currentUser.id];
-  const isHost = currentUser?.role === 'host';
-
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-6 py-4 animate-fade-in">
       {/* Welcome Card */}
@@ -77,7 +90,7 @@ export function Lobby({ room, currentUser, roomId, onJoin, onStartGame }: LobbyP
           Комната <span className="text-indigo-400">#{roomId}</span>
         </h2>
         <p className="text-sm text-slate-300 max-w-md mx-auto mt-2">
-          Пригласите друзей по ссылке, выберите роль и начинайте интеллектуальную битву!
+          Пригласите друзей по ссылке, выберите роли и начинайте интеллектуальную битву!
         </p>
 
         {/* Share Link Button */}
@@ -117,62 +130,28 @@ export function Lobby({ room, currentUser, roomId, onJoin, onStartGame }: LobbyP
               />
             </div>
 
-            {/* Role Choice */}
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-                Выберите роль
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Host Option */}
-                <button
-                  type="button"
-                  disabled={hasHostAlready}
-                  onClick={() => setSelectedRole('host')}
-                  className={`p-4 rounded-2xl border text-left transition-all relative ${
-                    selectedRole === 'host'
-                      ? 'bg-amber-950/40 border-amber-500 shadow-lg shadow-amber-950/50'
-                      : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
-                  } ${hasHostAlready ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                  <div className="flex items-center gap-2.5 mb-1">
-                    <Crown
-                      className={`w-5 h-5 ${
-                        selectedRole === 'host' ? 'text-amber-400' : 'text-slate-400'
-                      }`}
-                    />
-                    <span className="font-bold text-sm text-white">Ведущий</span>
-                  </div>
-                  <p className="text-xs text-slate-400">
-                    {hasHostAlready
-                      ? 'Ведущий в комнате уже есть'
-                      : 'Загадывает тайное слово и пытается отбивать намёки игроков.'}
-                  </p>
-                </button>
-
-                {/* Player Option */}
-                <button
-                  type="button"
-                  onClick={() => setSelectedRole('player')}
-                  className={`p-4 rounded-2xl border text-left transition-all ${
-                    selectedRole === 'player'
-                      ? 'bg-indigo-950/40 border-indigo-500 shadow-lg shadow-indigo-950/50'
-                      : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 mb-1">
-                    <Gamepad2
-                      className={`w-5 h-5 ${
-                        selectedRole === 'player' ? 'text-indigo-400' : 'text-slate-400'
-                      }`}
-                    />
-                    <span className="font-bold text-sm text-white">Игрок</span>
-                  </div>
-                  <p className="text-xs text-slate-400">
-                    Задает хитрые намёки, нажимает «Контакт!» и открывает буквы.
-                  </p>
-                </button>
+            {(!room || !room.hostId) && (
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                  Роль (вы создатель комнаты)
+                </label>
+                <div className="grid grid-cols-1 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRole('host')}
+                    className="p-4 rounded-2xl border text-left bg-amber-950/40 border-amber-500 shadow-lg shadow-amber-950/50 cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5 mb-1">
+                      <Crown className="w-5 h-5 text-amber-400" />
+                      <span className="font-bold text-sm text-white">Хост лобби и ведущий первого раунда</span>
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      Вы сможете начинать раунды, исключать игроков, передавать хоста и назначать ведущих.
+                    </p>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {error && (
               <div className="text-xs text-rose-400 flex items-center gap-1.5 p-2 bg-rose-950/30 rounded-xl border border-rose-900/50">
@@ -190,11 +169,11 @@ export function Lobby({ room, currentUser, roomId, onJoin, onStartGame }: LobbyP
             </button>
           </form>
         </div>
-      ) : isHost ? (
-        /* Step 2A: Host start form (Enter Secret Word) */
+      ) : isLeader ? (
+        /* Step 2A: Round Leader start form (Enter Secret Word) */
         <div className="glass-panel rounded-3xl p-6 sm:p-8 border border-amber-500/40 shadow-xl">
           <div className="flex items-center gap-2 mb-2">
-            <Crown className="w-6 h-6 text-amber-400" />
+            <Target className="w-6 h-6 text-amber-400" />
             <h3 className="text-xl font-bold text-white">Вы ведущий: загадайте слово</h3>
           </div>
           <p className="text-xs text-slate-300 mb-5">
@@ -246,49 +225,127 @@ export function Lobby({ room, currentUser, roomId, onJoin, onStartGame }: LobbyP
             <Gamepad2 className="w-8 h-8" />
           </div>
           <h3 className="text-lg font-bold text-white mb-1">
-            Вы в игре, {currentUser.name}!
+            Вы в лобби, {currentUser.name}!
           </h3>
           <p className="text-xs text-slate-400 max-w-sm mx-auto">
-            Ожидаем, пока ведущий загадает тайное слово и запустит партию...
+            Ожидаем, пока ведущий <strong className="text-amber-300 font-semibold">{currentLeaderName}</strong> загадает тайное слово и запустит раунд...
           </p>
         </div>
       )}
 
-      {/* Connected Players List */}
-      <div className="glass-panel rounded-3xl p-5 border border-slate-800">
-        <div className="flex items-center justify-between mb-3 px-1">
+      {/* Connected Players List & Host Administration */}
+      <div className="glass-panel rounded-3xl p-5 sm:p-6 border border-slate-800">
+        <div className="flex items-center justify-between mb-4 px-1">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-indigo-400" />
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
               Игроки в лобби ({playersList.length})
             </h4>
           </div>
-          <span className="text-[11px] text-slate-400">Для веселой игры нужно от 3 человек</span>
+          <span className="text-[11px] text-slate-400">Баллы сохраняются между раундами</span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-          {playersList.map((p) => (
-            <div
-              key={p.id}
-              className="p-3 rounded-2xl bg-slate-900/70 border border-slate-800 flex items-center gap-2.5"
-            >
+        <div className="flex flex-col gap-2.5">
+          {playersList.map((p) => {
+            const isPlayerHost = p.id === room?.hostId;
+            const isPlayerLeader = p.id === effectiveLeaderId;
+            const isMe = p.id === currentUser?.id;
+
+            return (
               <div
-                className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold ${
-                  p.role === 'host'
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                    : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                key={p.id}
+                className={`p-3.5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${
+                  isPlayerHost
+                    ? 'bg-amber-950/20 border-amber-500/30'
+                    : isPlayerLeader
+                    ? 'bg-purple-950/20 border-purple-500/30'
+                    : isMe
+                    ? 'bg-indigo-950/20 border-indigo-500/30'
+                    : 'bg-slate-900/70 border-slate-800'
                 }`}
               >
-                {p.role === 'host' ? <Crown className="w-4 h-4" /> : <Gamepad2 className="w-4 h-4" />}
-              </div>
-              <div className="overflow-hidden">
-                <div className="text-xs font-bold text-white truncate">{p.name}</div>
-                <div className="text-[10px] text-slate-400 capitalize">
-                  {p.role === 'host' ? 'Ведущий' : 'Игрок'}
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
+                      isPlayerHost
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                        : isPlayerLeader
+                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                        : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                    }`}
+                  >
+                    {isPlayerHost ? (
+                      <Crown className="w-4 h-4" />
+                    ) : isPlayerLeader ? (
+                      <Target className="w-4 h-4" />
+                    ) : (
+                      <Gamepad2 className="w-4 h-4" />
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-bold text-white">
+                        {p.name} {isMe && '(Вы)'}
+                      </span>
+                      {isPlayerHost && (
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                          <Crown className="w-3 h-3" /> Хост
+                        </span>
+                      )}
+                      {isPlayerLeader && (
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+                          <Target className="w-3 h-3" /> Ведущий
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-0.5">
+                      Накопленный счёт: <strong className="text-amber-300 font-mono">{p.score || 0}</strong> очков
+                    </div>
+                  </div>
                 </div>
+
+                {/* Host Controls for other players */}
+                {isLobbyHost && !isMe && (
+                  <div className="flex items-center gap-1.5 flex-wrap self-end sm:self-center">
+                    {!isPlayerLeader && onSetRoundLeader && (
+                      <button
+                        type="button"
+                        onClick={() => onSetRoundLeader(p.id)}
+                        className="px-2.5 py-1.5 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 text-purple-200 border border-purple-700/50 text-xs font-semibold flex items-center gap-1 transition-colors shadow-sm"
+                        title="Назначить ведущим на этот раунд"
+                      >
+                        <Target className="w-3 h-3 text-purple-400" />
+                        <span>Назначить ведущим</span>
+                      </button>
+                    )}
+                    {onTransferLobbyHost && (
+                      <button
+                        type="button"
+                        onClick={() => onTransferLobbyHost(p.id)}
+                        className="px-2.5 py-1.5 rounded-xl bg-amber-950/60 hover:bg-amber-900/80 text-amber-200 border border-amber-700/50 text-xs font-semibold flex items-center gap-1 transition-colors shadow-sm"
+                        title="Передать права хоста комнаты"
+                      >
+                        <Crown className="w-3 h-3 text-amber-400" />
+                        <span>Сделать хостом</span>
+                      </button>
+                    )}
+                    {onKickPlayer && (
+                      <button
+                        type="button"
+                        onClick={() => onKickPlayer(p.id)}
+                        className="px-2.5 py-1.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/50 text-xs font-semibold flex items-center gap-1 transition-colors shadow-sm"
+                        title="Исключить игрока из лобби"
+                      >
+                        <UserMinus className="w-3 h-3" />
+                        <span>Исключить</span>
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

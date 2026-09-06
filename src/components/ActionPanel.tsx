@@ -51,11 +51,27 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   const [joinWord, setJoinWord] = useState('');
   const [joinError, setJoinError] = useState<string | null>(null);
 
-  const isHost = currentUser.role === 'host';
+  const isHost = currentUser.role === 'host' || currentUser.id === (room.leaderId || room.hostId);
   const hasActiveQuestion = !!room.currentQuestion;
   const isQuestionAuthor = room.currentQuestion?.authorId === currentUser.id;
   const isContactDeclared = room.status === 'CONTACT_DECLARED';
   const revealedPrefix = room.secretWord.slice(0, room.revealedLettersCount);
+
+  // Direct guess cooldown calculation
+  const [remainingCooldownSec, setRemainingCooldownSec] = useState(0);
+
+  React.useEffect(() => {
+    const checkCooldown = () => {
+      const cooldownUntil = room.directGuessCooldowns?.[currentUser.id] || 0;
+      const now = Date.now();
+      const diff = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
+      setRemainingCooldownSec(diff);
+    };
+
+    checkCooldown();
+    const interval = setInterval(checkCooldown, 1000);
+    return () => clearInterval(interval);
+  }, [room.directGuessCooldowns, currentUser.id]);
 
   // Turn management
   const isMyTurn = !room.activePlayerId || room.activePlayerId === currentUser.id;
@@ -577,10 +593,18 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
           <div className="flex justify-end">
             <button
               onClick={onOpenDirectGuess}
-              className="px-4 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-indigo-300 hover:text-white border border-indigo-500/20 hover:border-indigo-500/40 text-xs font-semibold flex items-center gap-2 transition-colors"
+              className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors ${
+                remainingCooldownSec > 0
+                  ? 'bg-amber-950/40 hover:bg-amber-900/40 text-amber-300 border border-amber-500/30'
+                  : 'bg-slate-900/80 hover:bg-slate-800 text-indigo-300 hover:text-white border border-indigo-500/20 hover:border-indigo-500/40'
+              }`}
             >
-              <KeyRound className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Я знаю тайное слово целиком! (+25 очков)</span>
+              <KeyRound className={`w-3.5 h-3.5 ${remainingCooldownSec > 0 ? 'text-amber-400' : 'text-indigo-400'}`} />
+              <span>
+                {remainingCooldownSec > 0
+                  ? `Я знаю слово целиком! (Ждать ${remainingCooldownSec}с)`
+                  : 'Я знаю тайное слово целиком! (+25 очков)'}
+              </span>
             </button>
           </div>
         </div>

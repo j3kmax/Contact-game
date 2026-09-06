@@ -63,6 +63,7 @@ export interface HistoryItem {
 export interface Room {
   roomId: string;
   hostId: string;
+  leaderId?: string;
   secretWord: string;
   revealedLettersCount: number;
   status: GameStatus;
@@ -74,6 +75,7 @@ export interface Room {
   historyLog: HistoryItem[];
   activePlayerId?: string | null;
   turnOrder?: string[];
+  directGuessCooldowns?: Record<string, number>; // playerId -> expiry timestamp ms
   winner?: 'players' | 'host' | null;
   createdAt: number;
   updatedAt?: number;

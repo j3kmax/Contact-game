@@ -1,26 +1,45 @@
-import React, { useState } from 'react';
-import { KeyRound, X, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { KeyRound, X, AlertCircle, Clock } from 'lucide-react';
 
 interface DirectGuessModalProps {
   isOpen: boolean;
   onClose: () => void;
   onDirectGuess: (word: string) => Promise<{ correct: boolean; message: string }>;
+  cooldownUntil?: number;
 }
 
 export const DirectGuessModal: React.FC<DirectGuessModalProps> = ({
   isOpen,
   onClose,
   onDirectGuess,
+  cooldownUntil = 0,
 }) => {
   const [guessWord, setGuessWord] = useState('');
   const [feedback, setFeedback] = useState<{ message: string; isError: boolean } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [remainingSec, setRemainingSec] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const checkCooldown = () => {
+      const now = Date.now();
+      const diff = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
+      setRemainingSec(diff);
+    };
+
+    checkCooldown();
+    const timer = setInterval(checkCooldown, 1000);
+    return () => clearInterval(timer);
+  }, [isOpen, cooldownUntil]);
 
   if (!isOpen) return null;
 
+  const isCooldownActive = remainingSec > 0;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!guessWord.trim() || isSubmitting) return;
+    if (!guessWord.trim() || isSubmitting || isCooldownActive) return;
 
     setFeedback(null);
     try {
@@ -60,17 +79,27 @@ export const DirectGuessModal: React.FC<DirectGuessModalProps> = ({
           </div>
         </div>
 
+        {isCooldownActive && (
+          <div className="mb-4 p-3 rounded-xl bg-amber-950/50 border border-amber-500/40 text-amber-300 text-xs flex items-center gap-2">
+            <Clock className="w-4 h-4 text-amber-400 shrink-0 animate-spin" />
+            <span>
+              У вас 1 попытка в 30 секунд. Перезарядка: <strong>{remainingSec} сек.</strong>
+            </span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
             type="text"
             autoFocus
+            disabled={isCooldownActive}
             value={guessWord}
             onChange={(e) => {
               setGuessWord(e.target.value);
               setFeedback(null);
             }}
-            placeholder="Введите слово целиком..."
-            className="w-full px-4 py-3 rounded-xl bg-slate-900 text-white placeholder-slate-500 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold tracking-wide uppercase"
+            placeholder={isCooldownActive ? `Подождите ${remainingSec} сек...` : "Введите слово целиком..."}
+            className="w-full px-4 py-3 rounded-xl bg-slate-900 text-white placeholder-slate-500 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold tracking-wide uppercase disabled:opacity-50"
           />
 
           {feedback && (
@@ -96,10 +125,10 @@ export const DirectGuessModal: React.FC<DirectGuessModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={!guessWord.trim() || isSubmitting}
+              disabled={!guessWord.trim() || isSubmitting || isCooldownActive}
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white text-sm font-bold shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              Назвать слово
+              {isCooldownActive ? `Ждите (${remainingSec}с)` : 'Назвать слово'}
             </button>
           </div>
         </form>

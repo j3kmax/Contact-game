@@ -42,7 +42,8 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
     frame();
   }, []);
 
-  const isHost = currentUser?.role === 'host';
+  const effectiveLeaderId = room.leaderId || room.hostId;
+  const isHostOrLeader = currentUser?.id === room.hostId || currentUser?.id === effectiveLeaderId || currentUser?.role === 'host';
   const playersList = Object.values(room.players || {}).sort((a, b) => (b.score || 0) - (a.score || 0));
 
   return (
@@ -113,7 +114,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
                     </span>
 
                     <span className="font-semibold">
-                      {p.name} {isMe && '(Вы)'} {p.role === 'host' && '👑'}
+                      {p.name} {isMe && '(Вы)'} {p.id === room.hostId ? '👑' : p.id === effectiveLeaderId ? '🎯' : ''}
                     </span>
                   </div>
 
@@ -129,18 +130,18 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
         </div>
 
         {/* Restart Action */}
-        {isHost ? (
+        {isHostOrLeader ? (
           <button
             onClick={() => onRestart()}
-            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-lg shadow-xl shadow-amber-500/25 flex items-center justify-center gap-2 transform transition-all active:scale-95"
+            className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-lg shadow-xl shadow-amber-500/25 flex items-center justify-center gap-2 transform transition-all active:scale-95 cursor-pointer"
           >
             <RotateCcw className="w-5 h-5" />
-            <span>Начать следующий раунд</span>
+            <span>Начать следующий раунд (баллы сохраняются)</span>
           </button>
         ) : (
           <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 flex items-center justify-center gap-2">
             <Award className="w-4 h-4 text-amber-400" />
-            <span>Ожидаем, когда ведущий запустит следующий раунд...</span>
+            <span>Ожидаем, когда хост или ведущий запустит следующий раунд...</span>
           </div>
         )}
       </div>
