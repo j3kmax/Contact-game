@@ -99,6 +99,23 @@ export function useGameRoom(roomId: string | null) {
     }
   }, [room, currentUser, roomId]);
 
+  // Keep currentUser synced with room.players if role, score, or name changes
+  useEffect(() => {
+    if (room && currentUser && room.players?.[currentUser.id]) {
+      const latestPlayer = room.players[currentUser.id];
+      if (
+        latestPlayer.role !== currentUser.role ||
+        latestPlayer.score !== currentUser.score ||
+        latestPlayer.name !== currentUser.name
+      ) {
+        setCurrentUser(latestPlayer);
+        if (roomId) {
+          localStorage.setItem(`contact_player_${roomId}`, JSON.stringify(latestPlayer));
+        }
+      }
+    }
+  }, [room, currentUser, roomId]);
+
   // Save current player to localStorage
   const persistUser = (player: Player) => {
     setCurrentUser(player);
@@ -314,11 +331,23 @@ export function useGameRoom(roomId: string | null) {
       }
 
       const targetName = room.players[newHostId].name;
+
+      // Update player roles in room.players as well
+      const updatedPlayers: Record<string, Player> = {};
+      for (const [id, p] of Object.entries(room.players)) {
+        updatedPlayers[id] = {
+          ...p,
+          role: id === newHostId ? 'host' : 'player',
+        };
+      }
+
       const updates: Partial<Room> = {
         hostId: newHostId,
+        leaderId: newHostId,
+        players: updatedPlayers,
         historyLog: addLog(
           room.historyLog,
-          `👑 Права хоста лобби переданы игроку ${targetName}!`,
+          `👑 Права хоста лобби и ведущего переданы игроку ${targetName}!`,
           'info'
         ),
       };
@@ -1011,9 +1040,14 @@ export function useGameRoom(roomId: string | null) {
     sounds.playPop();
   }, [room, roomId, currentUser, addLog]);
 
+  // Derive currentUser using latest data from room.players if available
+  const effectiveCurrentUser = currentUser && room?.players?.[currentUser.id]
+    ? room.players[currentUser.id]
+    : currentUser;
+
   return {
     room,
-    currentUser,
+    currentUser: effectiveCurrentUser,
     loading,
     joinRoom,
     kickPlayer,

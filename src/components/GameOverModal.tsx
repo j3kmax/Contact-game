@@ -43,7 +43,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   }, []);
 
   const effectiveLeaderId = room.leaderId || room.hostId;
-  const isHostOrLeader = currentUser?.id === room.hostId || currentUser?.id === effectiveLeaderId || currentUser?.role === 'host';
+  const isHostOrLeader = currentUser?.id === room.hostId || currentUser?.id === effectiveLeaderId;
   const playersList = Object.values(room.players || {}).sort((a, b) => (b.score || 0) - (a.score || 0));
 
   return (

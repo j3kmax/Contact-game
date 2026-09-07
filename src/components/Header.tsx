@@ -92,12 +92,20 @@ export const Header: React.FC<HeaderProps> = ({
               {currentUser && (
                 <div
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 border ${
-                    currentUser.role === 'host'
+                    currentUser.id === (room?.leaderId || room?.hostId)
+                      ? 'bg-purple-950/60 text-purple-300 border-purple-600/40'
+                      : currentUser.id === room?.hostId
                       ? 'bg-amber-950/60 text-amber-300 border-amber-600/40'
                       : 'bg-indigo-950/60 text-indigo-300 border-indigo-600/40'
                   }`}
                 >
-                  <span>{currentUser.role === 'host' ? '👑 Ведущий' : '🎮 Игрок'}</span>
+                  <span>
+                    {currentUser.id === (room?.leaderId || room?.hostId)
+                      ? '🎯 Ведущий'
+                      : currentUser.id === room?.hostId
+                      ? '👑 Хост'
+                      : '🎮 Игрок'}
+                  </span>
                 </div>
               )}
             </>

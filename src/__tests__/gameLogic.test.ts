@@ -282,4 +282,37 @@ describe('Contact Game Logic & Normalization', () => {
     };
     expect(afterTransfer.hostId).toBe('p2');
   });
+
+  it('ensures Player 1 gets player interface and Player 2 gets leader interface after role transfer', () => {
+    // Room where p2 is the round leader, p1 was previous creator
+    const room: Partial<Room> = {
+      hostId: 'p1',
+      leaderId: 'p2',
+      players: {
+        p1: { id: 'p1', name: 'Player 1', role: 'player', score: 10 },
+        p2: { id: 'p2', name: 'Player 2', role: 'host', score: 20 },
+      },
+    };
+
+    const effectiveLeaderId = room.leaderId || room.hostId;
+    expect(effectiveLeaderId).toBe('p2');
+
+    // Player 1 interface check
+    const isPlayer1Leader = 'p1' === effectiveLeaderId;
+    expect(isPlayer1Leader).toBe(false); // Player 1 must NOT see deflect/host panel
+
+    // Player 2 interface check
+    const isPlayer2Leader = 'p2' === effectiveLeaderId;
+    expect(isPlayer2Leader).toBe(true); // Player 2 sees deflect/host panel
+
+    // If host is transferred to p2 as well
+    const updatedRoom: Partial<Room> = {
+      ...room,
+      hostId: 'p2',
+      leaderId: 'p2',
+    };
+    const newEffectiveLeaderId = updatedRoom.leaderId || updatedRoom.hostId;
+    expect('p1' === newEffectiveLeaderId).toBe(false);
+    expect('p2' === newEffectiveLeaderId).toBe(true);
+  });
 });

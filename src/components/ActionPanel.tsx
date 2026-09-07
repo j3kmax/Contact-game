@@ -51,7 +51,8 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   const [joinWord, setJoinWord] = useState('');
   const [joinError, setJoinError] = useState<string | null>(null);
 
-  const isHost = currentUser.role === 'host' || currentUser.id === (room.leaderId || room.hostId);
+  const effectiveLeaderId = room.leaderId || room.hostId;
+  const isHost = currentUser.id === effectiveLeaderId;
   const hasActiveQuestion = !!room.currentQuestion;
   const isQuestionAuthor = room.currentQuestion?.authorId === currentUser.id;
   const isContactDeclared = room.status === 'CONTACT_DECLARED';
