@@ -53,48 +53,50 @@ export const Timer: React.FC<TimerProps> = ({ timerExpiresAt, onExpired, isHost 
 
   return (
     <div
-      className={`w-full rounded-2xl p-4 sm:p-5 border transition-all duration-300 ${
+      className={`w-full rounded-3xl p-4 sm:p-5 border transition-all duration-300 relative overflow-hidden specular-border shadow-2xl ${
         isHost
-          ? 'bg-[#140b0f]/90 border-rose-600/40 shadow-xl shadow-rose-950/30'
-          : 'bg-[#0d111c]/90 border-slate-800 shadow-xl shadow-black/40'
+          ? 'bg-[#12080d]/95 border-rose-500/50 shadow-[0_0_35px_-5px_rgba(244,63,94,0.25)]'
+          : 'bg-[#0b0f1c]/95 border-blue-500/40 shadow-[0_0_35px_-5px_rgba(37,99,235,0.2)]'
       }`}
     >
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
         <div className="flex items-center gap-3.5">
           <div
-            className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-2xl font-mono border transition-all ${
+            className={`w-13 h-13 rounded-2xl flex items-center justify-center font-bold text-2xl sm:text-3xl font-mono border transition-all shadow-inner select-none ${
               isUrgent
-                ? 'bg-rose-950/60 border-rose-500/60 text-rose-300 shadow-lg shadow-rose-950/50'
-                : 'bg-[#090b10] border-slate-800 text-blue-400 shadow-inner'
+                ? 'bg-rose-950/70 border-rose-500 text-rose-300 shadow-[0_0_20px_rgba(244,63,94,0.4)] animate-pulse'
+                : 'bg-[#07090e] border-white/[0.1] text-blue-400'
             }`}
           >
-            {secondsLeft}
+            {secondsLeft}s
           </div>
 
           <div>
             <div className="flex items-center gap-2">
               {isHost ? (
-                <AlertTriangle className="w-4 h-4 text-rose-400" />
+                <AlertTriangle className="w-4 h-4 text-rose-400 animate-bounce" />
               ) : (
-                <Clock className="w-4 h-4 text-blue-400" />
+                <Clock className="w-4 h-4 text-blue-400 animate-spin" />
               )}
-              <h3 className="font-bold text-sm sm:text-base text-white tracking-tight">
-                {isHost ? 'ВНИМАНИЕ: ОБЪЯВЛЕН КОНТАКТ!' : 'ИДЕТ ОТСЧЕТ 10 СЕКУНД'}
+              <h3 className="font-black text-sm sm:text-base text-white tracking-tight">
+                {isHost ? 'УВАГА: ОГОЛОШЕНО КОНТАКТ!' : 'ЙДЕ ЗВОРОТНИЙ ВІДЛІК 10 СЕКУНД'}
               </h3>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-zinc-400 mt-0.5 font-medium">
               {isHost
-                ? 'У вас есть секунды, чтобы ввести «Это не...» и сбить контакт!'
-                : 'Ждём: успеет ли ведущий отгадать ассоциацию?'}
+                ? 'У вас є лічені секунди, щоб ввести «Це не...» і збити контакт!'
+                : 'Очікуємо: чи встигне ведучий відгадати асоціацію?'}
             </p>
           </div>
         </div>
 
-        {/* Precision Progress Indicator */}
-        <div className="w-full sm:w-48 bg-[#090b10] rounded-full h-2.5 p-0.5 border border-slate-800/90 overflow-hidden">
+        {/* High Precision Progress Track */}
+        <div className="w-full sm:w-52 bg-[#07090e] rounded-full h-3 p-0.5 border border-white/[0.09] overflow-hidden shadow-inner">
           <div
             className={`h-full rounded-full transition-all duration-200 ${
-              isUrgent ? 'bg-rose-500' : 'bg-gradient-to-r from-blue-600 to-indigo-500'
+              isUrgent
+                ? 'bg-rose-500 shadow-[0_0_12px_#f43f5e]'
+                : 'bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-400 shadow-[0_0_12px_#3b82f6]'
             }`}
             style={{ width: `${percentage}%` }}
           />

@@ -42,29 +42,46 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
     }
   };
 
+  const getBorderAccent = (type: HistoryItem['type']) => {
+    switch (type) {
+      case 'match':
+      case 'win':
+        return 'border-l-emerald-500';
+      case 'contact':
+        return 'border-l-amber-500';
+      case 'deflect':
+      case 'mismatch':
+        return 'border-l-rose-500';
+      case 'guess':
+        return 'border-l-cyan-500';
+      default:
+        return 'border-l-blue-500';
+    }
+  };
+
   const formatTime = (ts: number) => {
     const d = new Date(ts);
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   };
 
   return (
-    <div className="w-full glass-panel rounded-2xl border border-slate-800/80 overflow-hidden flex flex-col bg-[#0d111c]/90">
+    <div className="w-full glass-panel-elevated rounded-3xl border border-white/[0.08] overflow-hidden flex flex-col specular-border shadow-xl">
       {/* Header */}
       <div
         onClick={() => setIsOpenMobile(!isOpenMobile)}
-        className="px-4 py-3 border-b border-slate-800/80 flex items-center justify-between cursor-pointer sm:cursor-default select-none bg-[#090b10]/80"
+        className="px-4 py-3.5 border-b border-white/[0.08] flex items-center justify-between cursor-pointer sm:cursor-default select-none bg-[#07090e]/80"
       >
         <div className="flex items-center gap-2">
-          <History className="w-3.5 h-3.5 text-blue-400" />
-          <h4 className="font-bold text-xs uppercase tracking-wider text-slate-300">
-            История событий
+          <History className="w-4 h-4 text-blue-400" />
+          <h4 className="font-bold text-xs uppercase tracking-wider text-zinc-300 font-mono">
+            Хроніка подій
           </h4>
-          <span className="px-2 py-0.5 rounded-full bg-[#0d111c] border border-slate-800 text-slate-400 text-[10px] font-mono">
+          <span className="px-2 py-0.5 rounded-full bg-[#0b0e18] border border-white/[0.08] text-zinc-400 text-[10px] font-mono font-bold">
             {history?.length || 0}
           </span>
         </div>
 
-        <div className="sm:hidden text-slate-400">
+        <div className="sm:hidden text-zinc-400">
           {isOpenMobile ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </div>
       </div>
@@ -76,20 +93,22 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
         }`}
       >
         {(!history || history.length === 0) ? (
-          <div className="text-center py-6 text-slate-500 text-xs">
-            Событий пока нет. Начните с вопроса!
+          <div className="text-center py-8 text-zinc-500 text-xs font-mono">
+            Подій поки немає. Загадайте слово або намёк!
           </div>
         ) : (
           history.map((item) => (
             <div
               key={item.id}
-              className="p-2.5 rounded-xl bg-[#090b10]/90 border border-slate-800/80 flex items-start gap-2.5 text-xs transition-colors hover:border-slate-700"
+              className={`p-2.5 rounded-xl bg-[#07090e]/90 border border-white/[0.06] border-l-2 ${getBorderAccent(
+                item.type
+              )} flex items-start gap-2.5 text-xs transition-colors hover:border-white/[0.12]`}
             >
               <div className="mt-0.5 shrink-0">{getIcon(item.type)}</div>
               <div className="flex-1 leading-snug">
-                <p className="text-slate-300 font-medium">{item.text}</p>
+                <p className="text-zinc-200 font-medium">{item.text}</p>
               </div>
-              <div className="text-[10px] text-slate-500 font-mono shrink-0 whitespace-nowrap mt-0.5">
+              <div className="text-[10px] text-zinc-500 font-mono shrink-0 whitespace-nowrap mt-0.5">
                 {formatTime(item.timestamp)}
               </div>
             </div>
