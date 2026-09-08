@@ -224,27 +224,27 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
 
       {/* 2. Active Question Card (if any) */}
       {hasActiveQuestion && (
-        <div className="glass-panel-elevated rounded-3xl p-5 sm:p-6 border border-blue-500/30 relative overflow-hidden specular-border">
+        <div className="glass-panel-elevated rounded-3xl p-5 sm:p-6 border border-rose-400/40 shadow-[0_0_35px_rgba(244,63,94,0.25)] relative overflow-hidden specular-border">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3.5">
-              <div className="w-11 h-11 rounded-2xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0 mt-0.5 shadow-lg shadow-blue-950/40">
-                <Mic className="w-5 h-5 animate-pulse" />
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-rose-500/25 to-orange-500/25 border border-rose-400/50 flex items-center justify-center text-rose-300 shrink-0 mt-0.5 shadow-[0_0_18px_rgba(244,63,94,0.35)]">
+                <Mic className="w-5 h-5 animate-pulse text-rose-300" />
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-400 font-mono flex items-center gap-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-rose-400 font-mono flex items-center gap-1.5">
                     <span>Эфир Discord:</span>
                     <strong className="text-white">{room.currentQuestion!.authorName}</strong>
                   </span>
                   {/* Visual Audio Waveform */}
                   <div className="flex items-end gap-0.5 h-3.5 px-1 py-0.5">
-                    <span className="w-0.5 bg-blue-400 rounded-full animate-audio-bar-1" />
-                    <span className="w-0.5 bg-blue-400 rounded-full animate-audio-bar-2" />
-                    <span className="w-0.5 bg-blue-400 rounded-full animate-audio-bar-3" />
-                    <span className="w-0.5 bg-blue-400 rounded-full animate-audio-bar-4" />
+                    <span className="w-0.5 bg-rose-400 rounded-full animate-audio-bar-1" />
+                    <span className="w-0.5 bg-rose-400 rounded-full animate-audio-bar-2" />
+                    <span className="w-0.5 bg-rose-400 rounded-full animate-audio-bar-3" />
+                    <span className="w-0.5 bg-rose-400 rounded-full animate-audio-bar-4" />
                   </div>
                   {isQuestionAuthor && (
-                    <span className="text-[10px] bg-[#07090e] text-blue-300 px-2.5 py-0.5 rounded-lg border border-blue-500/30 font-mono flex items-center gap-1 shadow-inner">
+                    <span className="text-[10px] bg-[#140824] text-rose-300 px-2.5 py-0.5 rounded-lg border border-rose-400/40 font-mono flex items-center gap-1 shadow-inner">
                       <Lock className="w-2.5 h-2.5" />
                       Загадано: «{room.currentQuestion!.intendedWord}»
                     </span>
@@ -260,7 +260,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
             {(isQuestionAuthor || isHost) && (
               <button
                 onClick={() => onCancelQuestion()}
-                className="self-end sm:self-center px-3.5 py-2 rounded-xl bg-[#07090e]/80 hover:bg-rose-950/60 text-zinc-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/40 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                className="self-end sm:self-center px-3.5 py-2 rounded-xl bg-[#170928]/90 hover:bg-rose-950/70 text-zinc-300 hover:text-rose-200 border border-white/[0.1] hover:border-rose-500/50 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
                 title={isHost ? 'Сбросить вопрос' : 'Снять вопрос'}
               >
                 <XCircle className="w-3.5 h-3.5" />
@@ -444,14 +444,14 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                     setContactWord(revealedPrefix);
                     setContactError(null);
                   }}
-                  className="w-full py-5 px-6 rounded-3xl bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 text-slate-950 font-black text-xl sm:text-2xl tracking-widest uppercase shadow-[0_0_50px_rgba(16,185,129,0.7),0_0_20px_rgba(6,182,212,0.4)] flex items-center justify-center gap-3 transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] border border-emerald-200/90 specular-border cursor-pointer"
+                  className="w-full py-5 px-6 rounded-3xl bg-gradient-to-r from-emerald-400 via-lime-300 to-amber-300 hover:from-emerald-300 hover:to-amber-200 text-slate-950 font-black text-xl sm:text-2xl tracking-widest uppercase shadow-[0_0_50px_rgba(52,211,153,0.7),0_0_25px_rgba(251,191,36,0.5)] flex items-center justify-center gap-3 transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] border border-lime-200/90 specular-border cursor-pointer"
                 >
                   <Zap className="w-7 h-7 fill-current" />
                   <span>ЕСТЬ КОНТАКТ!</span>
                 </button>
               ) : (
                 /* Instant Word Input Form for declaring contact */
-                <div className="glass-panel-elevated rounded-3xl p-5 sm:p-7 border border-emerald-500/40 relative overflow-hidden specular-border animate-fade-in">
+                <div className="glass-panel-elevated rounded-3xl p-5 sm:p-7 border border-emerald-400/50 relative overflow-hidden specular-border animate-fade-in">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2 text-emerald-400 font-black text-base tracking-wide">
                       <Zap className="w-5 h-5 fill-emerald-400" />
@@ -484,12 +484,12 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                         setContactError(null);
                       }}
                       placeholder={`Слово на ${revealedPrefix}...`}
-                      className="flex-1 px-4 py-3.5 rounded-2xl bg-[#060818] text-emerald-300 font-mono font-bold text-base uppercase border border-emerald-400/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/50 placeholder-zinc-700 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                      className="flex-1 px-4 py-3.5 rounded-2xl bg-[#140824] text-emerald-300 font-mono font-bold text-base uppercase border border-emerald-400/50 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/50 placeholder-zinc-700 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
                     />
                     <button
                       type="submit"
                       disabled={!contactWord.trim() || isSubmitting}
-                      className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 hover:from-emerald-400 hover:to-cyan-300 text-slate-950 font-black text-sm uppercase shadow-[0_0_30px_rgba(16,185,129,0.6)] border border-emerald-300/80 flex items-center justify-center gap-2 disabled:opacity-50 transition-all cursor-pointer active:scale-95"
+                      className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-lime-400 to-amber-300 hover:from-emerald-400 hover:to-amber-200 text-slate-950 font-black text-sm uppercase shadow-[0_0_30px_rgba(16,185,129,0.6)] border border-lime-300/80 flex items-center justify-center gap-2 disabled:opacity-50 transition-all cursor-pointer active:scale-95"
                     >
                       <Zap className="w-4 h-4 fill-current" />
                       <span>Подтвердить (+10 очков)</span>
@@ -511,7 +511,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
           {hasActiveQuestion && isContactDeclared && !isQuestionAuthor && (
             <div>
               {hasJoinedContact ? (
-                <div className="p-5 rounded-3xl bg-[#060918]/90 border border-emerald-400/50 flex items-center gap-3.5 shadow-[0_0_25px_rgba(16,185,129,0.25)]">
+                <div className="p-5 rounded-3xl bg-[#140824]/90 border border-emerald-400/50 flex items-center gap-3.5 shadow-[0_0_25px_rgba(16,185,129,0.25)]">
                   <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0 drop-shadow-[0_0_8px_#34d399]" />
                   <div>
                     <div className="text-sm font-bold text-emerald-300">
@@ -531,16 +531,16 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                     setJoinWord(revealedPrefix);
                     setJoinError(null);
                   }}
-                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-cyan-600/25 via-blue-600/30 to-indigo-600/25 hover:from-cyan-500/40 hover:to-blue-500/40 text-cyan-200 hover:text-white font-bold text-base sm:text-lg shadow-[0_0_25px_rgba(6,182,212,0.3)] flex items-center justify-center gap-2.5 transition-all border border-cyan-400/40 hover:border-cyan-300 cursor-pointer active:scale-98"
+                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-rose-600/30 via-pink-600/30 to-orange-600/30 hover:from-rose-500/45 hover:to-orange-500/45 text-rose-200 hover:text-white font-bold text-base sm:text-lg shadow-[0_0_25px_rgba(244,63,94,0.3)] flex items-center justify-center gap-2.5 transition-all border border-rose-400/40 hover:border-rose-300 cursor-pointer active:scale-98"
                 >
-                  <Users className="w-5 h-5 text-cyan-400 drop-shadow-[0_0_6px_#22d3ee]" />
+                  <Users className="w-5 h-5 text-rose-300 drop-shadow-[0_0_6px_#fb7185]" />
                   <span>Я тоже знаю! Поддержать контакт (+5 очков)</span>
                 </button>
               ) : (
                 /* Form for other players to enter their word */
-                <div className="glass-panel-elevated rounded-3xl p-5 sm:p-6 border border-blue-500/40 relative overflow-hidden specular-border animate-fade-in">
+                <div className="glass-panel-elevated rounded-3xl p-5 sm:p-6 border border-rose-400/50 relative overflow-hidden specular-border animate-fade-in">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2 text-blue-300 font-bold text-sm">
+                    <div className="flex items-center gap-2 text-rose-300 font-bold text-sm">
                       <Users className="w-4 h-4" />
                       <span>ПОДДЕРЖАТЬ КОНТАКТ (+5 ОЧКОВ)</span>
                     </div>
@@ -570,13 +570,13 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                         setJoinWord(e.target.value.toUpperCase());
                         setJoinError(null);
                       }}
-                      placeholder={`Ваше слово (${revealedPrefix}...)...`}
-                      className="flex-1 px-4 py-3.5 rounded-2xl bg-[#07090e] text-blue-300 font-mono font-bold text-base uppercase border border-blue-500/40 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder-zinc-700 shadow-inner"
+                      placeholder={`Слово на ${revealedPrefix}...`}
+                      className="flex-1 px-4 py-3.5 rounded-2xl bg-[#140824] text-rose-200 font-mono font-bold text-base uppercase border border-rose-400/45 focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/50 placeholder-zinc-700 shadow-[0_0_15px_rgba(244,63,94,0.15)]"
                     />
                     <button
                       type="submit"
                       disabled={!joinWord.trim() || isSubmitting}
-                      className="px-6 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm uppercase shadow-lg shadow-blue-950/50 border border-blue-400/30 flex items-center justify-center gap-2 disabled:opacity-50 transition-all cursor-pointer"
+                      className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-orange-500 hover:from-rose-400 hover:to-orange-400 text-white font-bold text-sm uppercase shadow-[0_0_25px_rgba(244,63,94,0.5)] border border-rose-300/60 flex items-center justify-center gap-2 disabled:opacity-50 transition-all cursor-pointer active:scale-95"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       <span>Подтвердить</span>
@@ -599,17 +599,17 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
             <div>
               {isMyTurn ? (
                 /* Current player's turn to speak in Discord & lock in secret word */
-                <div className="glass-panel-elevated rounded-3xl p-5 sm:p-7 border border-cyan-400/50 shadow-[0_0_40px_rgba(6,182,212,0.3)] relative overflow-hidden specular-border animate-fade-in">
+                <div className="glass-panel-elevated rounded-3xl p-5 sm:p-7 border border-rose-400/50 shadow-[0_0_40px_rgba(244,63,94,0.3)] relative overflow-hidden specular-border animate-fade-in">
                   {/* 20s Turn Progress Bar */}
                   {room.turnExpiresAt && (
                     <div className="w-full bg-black/50 h-2 rounded-full overflow-hidden mb-4 border border-white/[0.1] p-0.5">
                       <div
                         className={`h-full transition-all duration-150 rounded-full ${
                           turnSecondsLeft <= 3
-                            ? 'bg-gradient-to-r from-rose-500 via-rose-400 to-amber-300 shadow-[0_0_16px_#f43f5e]'
+                            ? 'bg-gradient-to-r from-rose-600 to-red-500 shadow-[0_0_18px_#f43f5e]'
                             : turnSecondsLeft <= 6
-                            ? 'bg-gradient-to-r from-amber-400 to-yellow-300 shadow-[0_0_14px_#f59e0b]'
-                            : 'bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 shadow-[0_0_16px_#22d3ee]'
+                            ? 'bg-gradient-to-r from-orange-500 to-amber-400 shadow-[0_0_16px_#fb923c]'
+                            : 'bg-gradient-to-r from-rose-400 via-pink-400 to-amber-400 shadow-[0_0_16px_#fb7185]'
                         }`}
                         style={{ width: `${Math.min(100, Math.max(0, (turnSecondsLeft / 20) * 100))}%` }}
                       />
@@ -618,8 +618,8 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
 
                   <div className="flex items-center justify-between mb-3.5 flex-wrap gap-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500/25 to-blue-500/25 text-cyan-300 border border-cyan-400/50 flex items-center justify-center shadow-[0_0_18px_rgba(6,182,212,0.4)]">
-                        <Mic className="w-5 h-5 animate-pulse text-cyan-300" />
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500/30 to-orange-500/30 text-rose-300 border border-rose-400/50 flex items-center justify-center shadow-[0_0_18px_rgba(244,63,94,0.45)]">
+                        <Mic className="w-5 h-5 animate-pulse text-rose-300" />
                       </div>
                       <div>
                         <h4 className="font-bold text-base text-white">
@@ -634,16 +634,16 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                       {/* 20s Countdown Badge */}
                       {room.turnExpiresAt && (
                         <div
-                          className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 text-xs font-mono font-bold transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] ${
+                          className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 text-xs font-mono font-bold transition-all shadow-[0_0_15px_rgba(244,63,94,0.2)] ${
                             turnSecondsLeft <= 3
                               ? 'bg-rose-950/70 text-rose-200 border-rose-400/60 animate-pulse shadow-[0_0_18px_rgba(244,63,94,0.5)]'
                               : turnSecondsLeft <= 6
                               ? 'bg-amber-950/60 text-amber-200 border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.35)]'
-                              : 'bg-cyan-950/60 text-cyan-200 border-cyan-400/50 shadow-[0_0_15px_rgba(6,182,212,0.35)]'
+                              : 'bg-rose-950/60 text-rose-200 border-rose-400/50 shadow-[0_0_15px_rgba(244,63,94,0.35)]'
                           }`}
                           title="Оставшееся время на озвучивание намёка и ввод слова"
                         >
-                          <Clock className={`w-3.5 h-3.5 ${turnSecondsLeft <= 3 ? 'text-rose-400 animate-spin' : 'text-cyan-400'}`} />
+                          <Clock className={`w-3.5 h-3.5 ${turnSecondsLeft <= 3 ? 'text-rose-400 animate-spin' : 'text-rose-300'}`} />
                           <span>{turnSecondsLeft}с</span>
                         </div>
                       )}
@@ -658,14 +658,14 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                                 e.target.value = '';
                               }
                             }}
-                            className="px-3 py-1.5 rounded-xl bg-[#060818] text-cyan-300 border border-cyan-400/40 text-xs font-semibold cursor-pointer focus:outline-none hover:border-cyan-300 transition-colors shadow-[0_0_12px_rgba(6,182,212,0.15)]"
+                            className="px-3 py-1.5 rounded-xl bg-[#170928] text-rose-200 border border-rose-400/40 text-xs font-semibold cursor-pointer focus:outline-none hover:border-rose-300 transition-colors shadow-[0_0_12px_rgba(244,63,94,0.15)]"
                             title="Передать очередь хода выбранному игроку (только хост)"
                           >
                             <option value="" disabled>
                               👉 Передать ход...
                             </option>
                             {otherEligiblePlayers.map((p) => (
-                              <option key={p.id} value={p.id} className="bg-[#0b0e24] text-white">
+                              <option key={p.id} value={p.id} className="bg-[#1f0d32] text-white">
                                 {p.name}
                               </option>
                             ))}
@@ -676,7 +676,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                       <button
                         type="button"
                         onClick={onSkipTurn}
-                        className="px-3.5 py-1.5 rounded-xl bg-[#060818] hover:bg-zinc-900 text-zinc-300 hover:text-white border border-white/[0.12] hover:border-cyan-400/40 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        className="px-3.5 py-1.5 rounded-xl bg-[#170928] hover:bg-zinc-900 text-zinc-300 hover:text-white border border-white/[0.12] hover:border-rose-400/40 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                         title="Передать ход следующему игроку по кругу"
                       >
                         <SkipForward className="w-3.5 h-3.5" />
@@ -685,13 +685,13 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-xs text-zinc-300 mb-4 leading-relaxed bg-[#060818]/70 p-3.5 rounded-2xl border border-white/[0.08]">
+                  <div className="text-xs text-zinc-300 mb-4 leading-relaxed bg-[#170928]/70 p-3.5 rounded-2xl border border-white/[0.08]">
                     <p className="mb-1">
-                      <span className="inline-block w-4 h-4 rounded-full bg-cyan-500/25 text-cyan-300 text-[10px] font-bold text-center mr-1.5">1</span>
+                      <span className="inline-block w-4 h-4 rounded-full bg-rose-500/25 text-rose-300 text-[10px] font-bold text-center mr-1.5">1</span>
                       <strong>Озвучьте намёк голосом в Discord</strong> для всех участников.
                     </p>
                     <p>
-                      <span className="inline-block w-4 h-4 rounded-full bg-cyan-500/25 text-cyan-300 text-[10px] font-bold text-center mr-1.5">2</span>
+                      <span className="inline-block w-4 h-4 rounded-full bg-rose-500/25 text-rose-300 text-[10px] font-bold text-center mr-1.5">2</span>
                       Введите сюда <strong>секретное слово-отгадку</strong> (начинается на <strong className="text-amber-300 font-mono">{revealedPrefix}...</strong>):
                     </p>
                   </div>
@@ -707,7 +707,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                             setAskError(null);
                           }}
                           placeholder={`Секретное слово (например: ${revealedPrefix}ОПАТА)...`}
-                          className="w-full px-4 py-3.5 rounded-2xl bg-[#060818] text-amber-200 placeholder-zinc-700 border border-cyan-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/50 font-bold uppercase tracking-wider text-base font-mono transition-all shadow-[0_0_15px_rgba(6,182,212,0.15)]"
+                          className="w-full px-4 py-3.5 rounded-2xl bg-[#140824] text-amber-200 placeholder-zinc-700 border border-rose-400/40 focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-400/50 font-bold uppercase tracking-wider text-base font-mono transition-all shadow-[0_0_15px_rgba(244,63,94,0.15)]"
                         />
                       </div>
                       <p className="text-[11px] text-zinc-400 mt-1.5 font-mono">
@@ -726,7 +726,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                       <button
                         type="button"
                         onClick={onSkipTurn}
-                        className="px-4 py-3 rounded-xl bg-[#060818] hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-white/[0.1] text-xs font-semibold transition-colors cursor-pointer"
+                        className="px-4 py-3 rounded-xl bg-[#170928] hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-white/[0.1] text-xs font-semibold transition-colors cursor-pointer"
                       >
                         Нет идей? Пропустить
                       </button>
@@ -734,7 +734,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                       <button
                         type="submit"
                         disabled={!intendedWord.trim() || isSubmitting}
-                        className="px-7 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 hover:from-cyan-400 hover:to-blue-400 text-white font-black text-sm flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(6,182,212,0.5)] border border-cyan-300/50 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                        className="px-7 py-3 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-orange-500 hover:from-rose-400 hover:to-orange-400 text-white font-black text-sm flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(244,63,94,0.55)] border border-rose-300/60 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                       >
                         <Mic className="w-4 h-4" />
                         <span>Загадать слово 🎙️</span>
@@ -744,19 +744,19 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                 </div>
               ) : (
                 /* Another player's turn to speak */
-                <div className="glass-panel-elevated rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden specular-border border border-cyan-400/30 shadow-[0_0_35px_rgba(6,182,212,0.18)]">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-400/40 flex items-center justify-center mx-auto mb-3 shadow-[0_0_18px_rgba(6,182,212,0.3)]">
-                    <Mic className="w-7 h-7 animate-pulse text-cyan-300" />
+                <div className="glass-panel-elevated rounded-3xl p-6 sm:p-8 text-center relative overflow-hidden specular-border border border-rose-400/30 shadow-[0_0_35px_rgba(244,63,94,0.18)]">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-500/20 to-orange-500/20 text-rose-300 border border-rose-400/40 flex items-center justify-center mx-auto mb-3 shadow-[0_0_18px_rgba(244,63,94,0.3)]">
+                    <Mic className="w-7 h-7 animate-pulse text-rose-300" />
                   </div>
                   <h4 className="text-base sm:text-lg font-black text-white mb-1 tracking-tight">
-                    Очередь игрока: <span className="text-cyan-300 drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]">{activePlayerName}</span>
+                    Очередь игрока: <span className="text-rose-300 drop-shadow-[0_0_8px_rgba(244,63,94,0.6)]">{activePlayerName}</span>
                   </h4>
                   {room.turnExpiresAt && (
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#060818] border border-cyan-400/30 text-xs font-mono text-cyan-200 my-2 shadow-[0_0_12px_rgba(6,182,212,0.15)]">
-                      <Clock className={`w-3.5 h-3.5 ${turnSecondsLeft <= 3 ? 'text-rose-400 animate-pulse' : 'text-cyan-400'}`} />
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#170928] border border-rose-400/30 text-xs font-mono text-rose-200 my-2 shadow-[0_0_12px_rgba(244,63,94,0.15)]">
+                      <Clock className={`w-3.5 h-3.5 ${turnSecondsLeft <= 3 ? 'text-rose-400 animate-pulse' : 'text-rose-300'}`} />
                       <span>
                         Осталось времени на ход:{' '}
-                        <strong className={turnSecondsLeft <= 3 ? 'text-rose-300 font-bold' : 'text-cyan-300 font-bold'}>
+                        <strong className={turnSecondsLeft <= 3 ? 'text-rose-300 font-bold' : 'text-amber-300 font-bold'}>
                           {turnSecondsLeft} сек
                         </strong>
                       </span>

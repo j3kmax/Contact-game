@@ -24,7 +24,7 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
   const getIcon = (type: HistoryItem['type']) => {
     switch (type) {
       case 'question':
-        return <HelpCircle className="w-3.5 h-3.5 text-blue-400" />;
+        return <HelpCircle className="w-3.5 h-3.5 text-purple-400" />;
       case 'contact':
         return <Zap className="w-3.5 h-3.5 text-amber-400" />;
       case 'deflect':
@@ -34,11 +34,11 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
       case 'mismatch':
         return <XCircle className="w-3.5 h-3.5 text-rose-400" />;
       case 'guess':
-        return <KeyRound className="w-3.5 h-3.5 text-cyan-400" />;
+        return <KeyRound className="w-3.5 h-3.5 text-rose-400" />;
       case 'win':
         return <Trophy className="w-3.5 h-3.5 text-amber-400" />;
       default:
-        return <Info className="w-3.5 h-3.5 text-slate-400" />;
+        return <Info className="w-3.5 h-3.5 text-zinc-400" />;
     }
   };
 
@@ -53,9 +53,9 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
       case 'mismatch':
         return 'border-l-rose-500';
       case 'guess':
-        return 'border-l-cyan-500';
+        return 'border-l-rose-400';
       default:
-        return 'border-l-blue-500';
+        return 'border-l-purple-500';
     }
   };
 
@@ -69,14 +69,14 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
       {/* Header */}
       <div
         onClick={() => setIsOpenMobile(!isOpenMobile)}
-        className="px-4 py-3.5 border-b border-white/[0.08] flex items-center justify-between cursor-pointer sm:cursor-default select-none bg-[#07090e]/80"
+        className="px-4 py-3.5 border-b border-white/[0.08] flex items-center justify-between cursor-pointer sm:cursor-default select-none bg-[#140624]/80"
       >
         <div className="flex items-center gap-2">
-          <History className="w-4 h-4 text-blue-400" />
+          <History className="w-4 h-4 text-rose-400" />
           <h4 className="font-bold text-xs uppercase tracking-wider text-zinc-300 font-mono">
             Хроника событий
           </h4>
-          <span className="px-2 py-0.5 rounded-full bg-[#0b0e18] border border-white/[0.08] text-zinc-400 text-[10px] font-mono font-bold">
+          <span className="px-2 py-0.5 rounded-full bg-[#1b0832] border border-white/[0.08] text-zinc-400 text-[10px] font-mono font-bold">
             {history?.length || 0}
           </span>
         </div>
@@ -100,7 +100,7 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
           history.map((item) => (
             <div
               key={item.id}
-              className={`p-2.5 rounded-2xl bg-[#080c20]/90 border border-white/[0.08] border-l-2 ${getBorderAccent(
+              className={`p-2.5 rounded-2xl bg-[#150626]/90 border border-white/[0.08] border-l-2 ${getBorderAccent(
                 item.type
               )} flex items-start gap-2.5 text-xs transition-colors hover:border-white/[0.18] shadow-sm`}
             >

@@ -59,9 +59,9 @@ export const DirectGuessModal: React.FC<DirectGuessModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in">
-      <div className="w-full max-w-md glass-panel-elevated rounded-3xl p-6 sm:p-7 shadow-[0_0_50px_rgba(217,70,239,0.35),0_20px_50px_rgba(0,0,0,0.85)] border border-fuchsia-400/40 relative overflow-hidden specular-border">
-        {/* Ambient violet/pink flare */}
-        <div className="absolute -top-20 -right-20 w-48 h-48 bg-fuchsia-500/20 blur-3xl pointer-events-none rounded-full" />
+      <div className="w-full max-w-md glass-panel-elevated rounded-3xl p-6 sm:p-7 shadow-[0_0_50px_rgba(244,63,94,0.3),0_20px_50px_rgba(0,0,0,0.85)] border border-rose-500/40 relative overflow-hidden specular-border">
+        {/* Ambient rose/amber flare */}
+        <div className="absolute -top-20 -right-20 w-48 h-48 bg-rose-500/20 blur-3xl pointer-events-none rounded-full" />
 
         <button
           onClick={onClose}
@@ -71,11 +71,11 @@ export const DirectGuessModal: React.FC<DirectGuessModalProps> = ({
         </button>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-fuchsia-500/25 to-purple-500/25 border border-fuchsia-400/45 flex items-center justify-center text-fuchsia-300 shadow-[0_0_15px_rgba(217,70,239,0.35)] shrink-0">
-            <KeyRound className="w-5 h-5 drop-shadow-[0_0_6px_#ec4899]" />
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-rose-500/25 to-amber-500/25 border border-rose-400/50 flex items-center justify-center text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.35)] shrink-0">
+            <KeyRound className="w-5 h-5 drop-shadow-[0_0_6px_#f43f5e]" />
           </div>
           <div>
-            <h3 className="font-black text-lg sm:text-xl tracking-tight bg-gradient-to-r from-fuchsia-300 via-pink-200 to-cyan-300 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]">
+            <h3 className="font-black text-lg sm:text-xl tracking-tight bg-gradient-to-r from-rose-400 via-orange-300 to-amber-200 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(244,63,94,0.4)]">
               Прямая отгадка
             </h3>
             <p className="text-xs text-zinc-300">
@@ -104,7 +104,7 @@ export const DirectGuessModal: React.FC<DirectGuessModalProps> = ({
               setFeedback(null);
             }}
             placeholder={isCooldownActive ? `Подождите ${remainingSec} сек...` : "ВВЕДИТЕ СЛОВО ЦЕЛИКОМ..."}
-            className="w-full px-4 py-3.5 rounded-2xl bg-[#060818] text-fuchsia-200 placeholder-zinc-700 border border-fuchsia-400/40 focus:outline-none focus:ring-2 focus:ring-fuchsia-400/50 focus:border-fuchsia-400 font-black tracking-widest uppercase disabled:opacity-40 font-mono text-base shadow-[0_0_15px_rgba(217,70,239,0.15)]"
+            className="w-full px-4 py-3.5 rounded-2xl bg-[#140624] text-rose-200 placeholder-zinc-600 border border-rose-500/40 focus:outline-none focus:ring-2 focus:ring-rose-400/50 focus:border-rose-400 font-black tracking-widest uppercase disabled:opacity-40 font-mono text-base shadow-[0_0_15px_rgba(244,63,94,0.15)]"
           />
 
           {feedback && (
@@ -124,14 +124,14 @@ export const DirectGuessModal: React.FC<DirectGuessModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl bg-[#060818] hover:bg-zinc-800 border border-white/[0.1] text-zinc-300 hover:text-white text-sm font-semibold transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-[#140624] hover:bg-zinc-800 border border-white/[0.1] text-zinc-300 hover:text-white text-sm font-semibold transition-colors cursor-pointer"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={!guessWord.trim() || isSubmitting || isCooldownActive}
-              className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 hover:from-violet-500 hover:to-pink-400 text-white text-sm font-black shadow-[0_0_25px_rgba(217,70,239,0.5)] border border-fuchsia-300/60 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer active:scale-95"
+              className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-rose-500 via-orange-500 to-amber-400 hover:from-rose-400 hover:to-amber-300 text-slate-950 text-sm font-black shadow-[0_0_25px_rgba(244,63,94,0.4)] border border-rose-300/60 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer active:scale-95"
             >
               {isCooldownActive ? `Ждите (${remainingSec}с)` : 'Назвать слово'}
             </button>
