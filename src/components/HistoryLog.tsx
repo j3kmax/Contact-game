@@ -74,7 +74,7 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
         <div className="flex items-center gap-2">
           <History className="w-4 h-4 text-blue-400" />
           <h4 className="font-bold text-xs uppercase tracking-wider text-zinc-300 font-mono">
-            Хроніка подій
+            Хроника событий
           </h4>
           <span className="px-2 py-0.5 rounded-full bg-[#0b0e18] border border-white/[0.08] text-zinc-400 text-[10px] font-mono font-bold">
             {history?.length || 0}
@@ -94,7 +94,7 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
       >
         {(!history || history.length === 0) ? (
           <div className="text-center py-8 text-zinc-500 text-xs font-mono">
-            Подій поки немає. Загадайте слово або намёк!
+            Событий пока нет. Загадайте слово или намёк!
           </div>
         ) : (
           history.map((item) => (

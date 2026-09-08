@@ -79,13 +79,13 @@ export const Timer: React.FC<TimerProps> = ({ timerExpiresAt, onExpired, isHost 
                 <Clock className="w-4 h-4 text-blue-400 animate-spin" />
               )}
               <h3 className="font-black text-sm sm:text-base text-white tracking-tight">
-                {isHost ? 'УВАГА: ОГОЛОШЕНО КОНТАКТ!' : 'ЙДЕ ЗВОРОТНИЙ ВІДЛІК 10 СЕКУНД'}
+                {isHost ? 'ВНИМАНИЕ: ОБЪЯВЛЕН КОНТАКТ!' : 'ИДЕТ ОБРАТНЫЙ ОТСЧЕТ 10 СЕКУНД'}
               </h3>
             </div>
             <p className="text-xs text-zinc-400 mt-0.5 font-medium">
               {isHost
-                ? 'У вас є лічені секунди, щоб ввести «Це не...» і збити контакт!'
-                : 'Очікуємо: чи встигне ведучий відгадати асоціацію?'}
+                ? 'У вас есть считанные секунды, чтобы ввести «Это не...» и сбить контакт!'
+                : 'Ожидаем: успеет ли ведущий отгадать ассоциацию?'}
             </p>
           </div>
         </div>

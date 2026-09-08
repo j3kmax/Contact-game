@@ -36,7 +36,7 @@ export function Lobby({
   const isJoined = !!currentUser && !!room?.players?.[currentUser.id];
   const isLobbyHost = !!room?.hostId && currentUser?.id === room.hostId;
   const isLeader = !!currentUser && (currentUser.id === effectiveLeaderId || (!room?.leaderId && isLobbyHost));
-  const currentLeaderName = (effectiveLeaderId && room?.players?.[effectiveLeaderId]?.name) || 'Ведучий';
+  const currentLeaderName = (effectiveLeaderId && room?.players?.[effectiveLeaderId]?.name) || 'Ведущий';
 
   const handleCopy = () => {
     const url = `${window.location.origin}${window.location.pathname}#room=${roomId}`;
@@ -55,7 +55,7 @@ export function Lobby({
       setIsSubmitting(true);
       await onJoin(name.trim(), selectedRole);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Помилка входу');
+      setError(err instanceof Error ? err.message : 'Ошибка входа');
     } finally {
       setIsSubmitting(false);
     }
@@ -70,7 +70,7 @@ export function Lobby({
       setIsSubmitting(true);
       await onStartGame(secretWord.trim());
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Помилка запуску');
+      setError(err instanceof Error ? err.message : 'Ошибка запуска');
     } finally {
       setIsSubmitting(false);
     }
@@ -85,10 +85,10 @@ export function Lobby({
         </div>
 
         <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-          Кімната <span className="text-blue-400 font-mono tracking-wider">#{roomId}</span>
+          Комната <span className="text-blue-400 font-mono tracking-wider">#{roomId}</span>
         </h2>
         <p className="text-sm text-zinc-400 max-w-md mx-auto mt-2 leading-relaxed font-medium">
-          Поділіться цим посиланням з учасниками у Discord. Розпочинайте партію, коли всі готові.
+          Поделитесь этой ссылкой с участниками в Discord. Начинайте партию, когда все готовы.
         </p>
 
         {/* Share Link Button */}
@@ -101,7 +101,7 @@ export function Lobby({
             className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-blue-950/50 border border-blue-400/20 cursor-pointer active:scale-95"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copied ? 'Скопійовано!' : 'Копіювати'}</span>
+            <span>{copied ? 'Скопировано!' : 'Копировать'}</span>
           </button>
         </div>
       </div>
@@ -110,20 +110,20 @@ export function Lobby({
       {!isJoined ? (
         <div className="glass-panel-elevated rounded-3xl p-6 sm:p-8 specular-border">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <span>Вхід до лобі гри</span>
+            <span>Вход в лобби игры</span>
           </h3>
 
           <form onSubmit={handleJoin} className="flex flex-col gap-5">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
-                Ваше ігрове ім'я
+                Ваше игровое имя
               </label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Введіть свій нікнейм..."
+                placeholder="Введите свой никнейм..."
                 className="w-full px-4 py-3.5 rounded-2xl bg-[#07090e] text-white placeholder-zinc-600 border border-white/[0.09] focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-base font-semibold transition-colors shadow-inner"
               />
             </div>
@@ -131,7 +131,7 @@ export function Lobby({
             {(!room || !room.hostId) && (
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2 font-mono">
-                  Статус кімнати
+                  Статус комнаты
                 </label>
                 <div className="grid grid-cols-1 gap-3">
                   <button
@@ -142,11 +142,11 @@ export function Lobby({
                     <div className="flex items-center gap-2.5 mb-1">
                       <Crown className="w-5 h-5 text-amber-400" />
                       <span className="font-bold text-sm text-white group-hover:text-amber-300 transition-colors">
-                        Хост кімнати та ведучий першого раунду
+                        Хост комнаты и ведущий первого раунда
                       </span>
                     </div>
                     <p className="text-xs text-zinc-400">
-                      Повний контроль кімнати: призначення ведучих, передача прав, виключення гравців та старт гри.
+                      Полный контроль комнаты: назначение ведущих, передача прав, исключение игроков и старт игры.
                     </p>
                   </button>
                 </div>
@@ -165,7 +165,7 @@ export function Lobby({
               disabled={!name.trim() || isSubmitting}
               className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-base shadow-xl shadow-blue-950/50 border border-blue-400/20 transition-all disabled:opacity-40 cursor-pointer active:scale-[0.99]"
             >
-              Увійти в кімнату
+              Войти в комнату
             </button>
           </form>
         </div>
@@ -176,16 +176,16 @@ export function Lobby({
             <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
               <Target className="w-4 h-4" />
             </div>
-            <h3 className="text-lg font-bold text-white">Ви ведучий: загадайте таємне слово</h3>
+            <h3 className="text-lg font-bold text-white">Вы ведущий: загадайте тайное слово</h3>
           </div>
           <p className="text-xs text-zinc-400 mb-5 leading-relaxed">
-            Іменник в називному відмінку (наприклад: <strong>АВТОМОБІЛЬ</strong>, <strong>ФОТОГРАФІЯ</strong>). Гравцям відкриється лише перша буква!
+            Существительное в именительном падеже (например: <strong>АВТОМОБИЛЬ</strong>, <strong>ФОТОГРАФИЯ</strong>). Игрокам откроется только первая буква!
           </p>
 
           <form onSubmit={handleStart} className="flex flex-col gap-4">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5 font-mono">
-                Секретне слово
+                Секретное слово
               </label>
               <input
                 type="text"
@@ -195,11 +195,11 @@ export function Lobby({
                   setSecretWord(e.target.value.toUpperCase());
                   setError(null);
                 }}
-                placeholder="ВВЕДІТЬ СЛОВО..."
+                placeholder="ВВЕДИТЕ СЛОВО..."
                 className="w-full px-4 py-4 rounded-2xl bg-[#07090e] text-amber-300 placeholder-zinc-700 border border-white/[0.09] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-2xl font-black tracking-widest uppercase font-mono text-center transition-colors shadow-inner"
               />
               <p className="text-[11px] text-zinc-500 mt-1.5 text-center font-mono">
-                Не менше 3 символів • Тільки літери
+                Не менее 3 символов • Только буквы
               </p>
             </div>
 
@@ -216,7 +216,7 @@ export function Lobby({
               className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-xl shadow-amber-500/20 border border-amber-400/40 flex items-center justify-center gap-2 transition-all disabled:opacity-40 cursor-pointer active:scale-[0.99]"
             >
               <Play className="w-5 h-5 fill-current" />
-              <span>Розпочати гру</span>
+              <span>Начать игру</span>
             </button>
           </form>
         </div>
@@ -227,10 +227,10 @@ export function Lobby({
             <Gamepad2 className="w-8 h-8 animate-pulse text-blue-400" />
           </div>
           <h3 className="text-base sm:text-lg font-black text-white mb-1 tracking-tight">
-            Ви в лобі, {currentUser.name}
+            Вы в лобби, {currentUser.name}
           </h3>
           <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
-            Очікуємо, поки ведучий <strong className="text-white font-semibold">{currentLeaderName}</strong> загадає таємне слово та почне раунд...
+            Ожидаем, пока ведущий <strong className="text-white font-semibold">{currentLeaderName}</strong> загадает тайное слово и начнёт раунд...
           </p>
         </div>
       )}
@@ -241,10 +241,10 @@ export function Lobby({
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-blue-400" />
             <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-300 font-mono">
-              Учасники ({playersList.length})
+              Участники ({playersList.length})
             </h4>
           </div>
-          <span className="text-[11px] text-zinc-500 font-mono">Бали зберігаються між раундами</span>
+          <span className="text-[11px] text-zinc-500 font-mono">Баллы сохраняются между раундами</span>
         </div>
 
         <div className="flex flex-col gap-2.5">
@@ -288,7 +288,7 @@ export function Lobby({
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-bold text-white">
-                        {p.name} {isMe && '(Ви)'}
+                        {p.name} {isMe && '(Вы)'}
                       </span>
                       {isPlayerHost && (
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30 flex items-center gap-1 font-mono">
@@ -297,12 +297,12 @@ export function Lobby({
                       )}
                       {isPlayerLeader && (
                         <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-500/10 text-blue-300 border border-blue-500/30 flex items-center gap-1 font-mono">
-                          <Target className="w-3 h-3" /> Ведучий
+                          <Target className="w-3 h-3" /> Ведущий
                         </span>
                       )}
                     </div>
                     <div className="text-xs text-zinc-400 mt-0.5 font-mono">
-                      Бали: <strong className="text-amber-300">{p.score || 0}</strong>
+                      Баллы: <strong className="text-amber-300">{p.score || 0}</strong>
                     </div>
                   </div>
                 </div>
@@ -315,10 +315,10 @@ export function Lobby({
                         type="button"
                         onClick={() => onSetRoundLeader(p.id)}
                         className="px-3 py-1.5 rounded-xl bg-blue-950/40 hover:bg-blue-900/60 text-blue-200 border border-blue-700/40 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-sm"
-                        title="Призначити ведучим на цей раунд"
+                        title="Назначить ведущим на этот раунд"
                       >
                         <Target className="w-3 h-3 text-blue-400" />
-                        <span>Ведучий</span>
+                        <span>Ведущий</span>
                       </button>
                     )}
                     {onTransferLobbyHost && (
@@ -326,10 +326,10 @@ export function Lobby({
                         type="button"
                         onClick={() => onTransferLobbyHost(p.id)}
                         className="px-3 py-1.5 rounded-xl bg-amber-950/40 hover:bg-amber-900/60 text-amber-200 border border-amber-700/40 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-sm"
-                        title="Передати права хоста кімнати"
+                        title="Передать права хоста комнаты"
                       >
                         <Crown className="w-3 h-3 text-amber-400" />
-                        <span>Зробити хостом</span>
+                        <span>Сделать хостом</span>
                       </button>
                     )}
                     {onKickPlayer && (
@@ -337,10 +337,10 @@ export function Lobby({
                         type="button"
                         onClick={() => onKickPlayer(p.id)}
                         className="px-3 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-sm"
-                        title="Виключити гравця з лобі"
+                        title="Исключить игрока из лобби"
                       >
                         <UserMinus className="w-3 h-3" />
-                        <span>Виключити</span>
+                        <span>Исключить</span>
                       </button>
                     )}
                   </div>

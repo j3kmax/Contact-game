@@ -57,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-zinc-400 font-medium hidden sm:block">
-              Словесна інтелектуальна гра
+              Словесная интеллектуальная игра
             </p>
           </div>
         </div>
@@ -69,7 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
               {/* Room Code Badge */}
               <button
                 onClick={handleCopyLink}
-                title="Натисніть, щоб скопіювати посилання на кімнату"
+                title="Нажмите, чтобы скопировать ссылку на комнату"
                 className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#07090e]/90 hover:bg-zinc-900 text-zinc-200 text-xs font-mono border border-white/[0.08] hover:border-blue-500/40 transition-all group shadow-inner"
               >
                 <span className="text-zinc-500 text-[11px] font-sans font-medium">Код:</span>
@@ -100,10 +100,10 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <span className="font-medium">
                     {currentUser.id === (room?.leaderId || room?.hostId)
-                      ? '🎯 Ведучий'
+                      ? '🎯 Ведущий'
                       : currentUser.id === room?.hostId
                       ? '👑 Хост'
-                      : '🎮 Гравець'}
+                      : '🎮 Игрок'}
                   </span>
                 </div>
               )}
@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={toggleAudio}
             className="p-2 rounded-xl bg-[#07090e]/80 hover:bg-zinc-900 text-zinc-400 hover:text-white border border-white/[0.07] hover:border-white/[0.15] transition-all"
-            title={isMuted ? 'Увімкнути звук' : 'Вимкнути звук'}
+            title={isMuted ? 'Включить звук' : 'Выключить звук'}
           >
             {isMuted ? <VolumeX className="w-4 h-4 text-zinc-500" /> : <Volume2 className="w-4 h-4 text-blue-400" />}
           </button>
@@ -123,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onOpenRules}
             className="p-2 rounded-xl bg-[#07090e]/80 hover:bg-zinc-900 text-zinc-400 hover:text-white border border-white/[0.07] hover:border-white/[0.15] transition-all"
-            title="Правила гри"
+            title="Правила игры"
           >
             <HelpCircle className="w-4 h-4 text-zinc-300" />
           </button>
@@ -138,8 +138,8 @@ export const Header: React.FC<HeaderProps> = ({
             }`}
             title={
               isFirebaseActive
-                ? 'Firebase Realtime DB підключено'
-                : 'Демо-режим (Натисніть для налаштування Firebase)'
+                ? 'Firebase Realtime DB подключена'
+                : 'Демо-режим (Нажмите для настройки Firebase)'
             }
           >
             {isFirebaseActive ? (

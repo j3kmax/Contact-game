@@ -108,15 +108,15 @@ export function App() {
             </div>
 
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0b0e18] border border-white/[0.09] text-[11px] font-semibold text-blue-400 uppercase tracking-widest mb-3 font-mono shadow-inner">
-              Інтелектуальна онлайн-гра
+              Интеллектуальная онлайн-игра
             </div>
 
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-100 to-zinc-400 mb-3">
-              Є КОНТАКТ!
+              ЕСТЬ КОНТАКТ!
             </h1>
             <p className="text-sm sm:text-base text-zinc-400 max-w-md mx-auto leading-relaxed mb-8 font-medium">
-              Словесна гра на інтуїцію, асоціації та командний розрахунок.
-              Розгадуйте намёки, координуйтеся у голосовому чаті та відкривайте букви одну за одною.
+              Словесная игра на интуицию, ассоциации и командный расчёт.
+              Разгадывайте намёки, координируйтесь в голосовом чате и открывайте буквы одну за другой.
             </p>
 
             {/* Quick Room Actions */}
@@ -126,13 +126,13 @@ export function App() {
                 className="w-full py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-base shadow-xl shadow-blue-950/50 border border-blue-400/30 flex items-center justify-center gap-2.5 transform transition-all active:scale-[0.99] cursor-pointer specular-border"
               >
                 <Plus className="w-5 h-5" />
-                <span>Створити нову кімнату</span>
+                <span>Создать новую комнату</span>
               </button>
 
               <div className="relative flex items-center justify-center my-2">
                 <div className="border-t border-white/[0.08] w-full" />
                 <span className="bg-[#07090e] px-3 text-[11px] uppercase tracking-wider text-zinc-500 font-bold font-mono absolute">
-                  або
+                  или
                 </span>
               </div>
 
@@ -147,7 +147,7 @@ export function App() {
                   type="text"
                   value={inputCode}
                   onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-                  placeholder="ВВЕДІТЬ КОД КІМНАТИ..."
+                  placeholder="ВВЕДИТЕ КОД КОМНАТЫ..."
                   className="flex-1 px-4 py-3.5 rounded-2xl bg-[#0b0e18] border border-white/[0.09] text-white placeholder-zinc-600 font-mono font-bold tracking-wider focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm transition-colors shadow-inner"
                 />
                 <button
@@ -155,7 +155,7 @@ export function App() {
                   disabled={!inputCode.trim()}
                   className="px-6 py-3.5 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-white/[0.09] font-bold text-sm flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
-                  <span>Увійти</span>
+                  <span>Войти</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </form>
@@ -164,7 +164,7 @@ export function App() {
                 onClick={() => setIsRulesOpen(true)}
                 className="mt-2 text-xs text-zinc-400 hover:text-white font-medium transition-colors cursor-pointer"
               >
-                Правила та механіка гри
+                Правила и механика игры
               </button>
             </div>
           </div>
@@ -172,7 +172,7 @@ export function App() {
           /* Room Loading State */
           <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16 text-slate-400">
             <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-            <p className="text-sm font-medium font-mono">Підключення до кімнати {roomId}...</p>
+            <p className="text-sm font-medium font-mono">Подключение к комнате {roomId}...</p>
           </div>
         ) : isInGame ? (
           /* Active Game View */

@@ -583,17 +583,17 @@ export function useGameRoom(roomId: string | null) {
     async (targetPlayerId: string) => {
       if (!room || !roomId || !currentUser) return;
       if (room.status !== 'QUESTION_PHASE' || room.currentQuestion) {
-        throw new Error('Не можна передавати хід під час активного питання чи контакту');
+        throw new Error('Нельзя передавать ход во время активного вопроса или контакта');
       }
 
       const effectiveLeaderId = room.leaderId || room.hostId;
       if (targetPlayerId === effectiveLeaderId) {
-        throw new Error('Не можна передати хід ведучому раунду');
+        throw new Error('Нельзя передать ход ведущему раунда');
       }
 
       const targetPlayer = room.players?.[targetPlayerId];
       if (!targetPlayer) {
-        throw new Error('Гравця не знайдено в кімнаті');
+        throw new Error('Игрок не найден в комнате');
       }
 
       const currentPlayers = Object.values(room.players || {}).filter((p) => p.id !== effectiveLeaderId);
@@ -614,7 +614,7 @@ export function useGameRoom(roomId: string | null) {
         turnOrder: existingOrder,
         historyLog: addLog(
           room.historyLog,
-          `👉 ${currentUser.name} передав чергу ходу гравцю ${targetPlayer.name}.`,
+          `👉 ${currentUser.name} передал очередь хода игроку ${targetPlayer.name}.`,
           'info',
           currentUser.name
         ),

@@ -90,10 +90,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-blue-400" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-300 font-mono">
-                  Гравці в раунді ({playersList.length})
+                  Игроки в раунде ({playersList.length})
                 </h4>
               </div>
-              <span className="text-[10px] text-zinc-500 font-mono">Турнірні бали</span>
+              <span className="text-[10px] text-zinc-500 font-mono">Турнирные баллы</span>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -123,11 +123,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   >
                     <div className="flex items-center gap-2.5 overflow-hidden">
                       {isPlayerHost ? (
-                        <span title="Хост кімнати" className="flex items-center">
+                        <span title="Хост комнаты" className="flex items-center">
                           <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                         </span>
                       ) : isPlayerLeader ? (
-                        <span title="Ведучий" className="flex items-center">
+                        <span title="Ведущий" className="flex items-center">
                           <Target className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                         </span>
                       ) : (
@@ -135,23 +135,23 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       )}
 
                       <span className="font-bold truncate max-w-[110px]">
-                        {p.name} {isMe && '(Ви)'}
+                        {p.name} {isMe && '(Вы)'}
                       </span>
 
                       {/* Status indicator tags */}
                       {isTurnPlayer && (
                         <span className="text-[10px] text-blue-400 font-extrabold uppercase tracking-wide bg-blue-500/15 px-1.5 py-0.5 rounded border border-blue-500/30">
-                          Ходить
+                          Ходит
                         </span>
                       )}
                       {isQuestionAuthor && (
-                        <span className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_6px_#60a5fa] shrink-0" title="Автор намёку" />
+                        <span className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_6px_#60a5fa] shrink-0" title="Автор намёка" />
                       )}
                       {isContactPartner && (
-                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" title="Оголосив Контакт" />
+                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" title="Объявил Контакт" />
                       )}
                       {isAdditionalPartner && (
-                        <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0" title="Підтримав Контакт" />
+                        <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0" title="Поддержал Контакт" />
                       )}
                     </div>
 
@@ -162,10 +162,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                           type="button"
                           onClick={() => onPassTurnTo(p.id)}
                           className="px-2 py-0.5 rounded-lg bg-blue-950/60 hover:bg-blue-900/80 text-blue-300 hover:text-white border border-blue-500/30 text-[10px] font-mono font-bold flex items-center gap-1 transition-all cursor-pointer shadow-sm hover:border-blue-400 active:scale-95"
-                          title={`Передати чергу ходу гравцю ${p.name}`}
+                          title={`Передать очередь хода игроку ${p.name}`}
                         >
                           <ArrowRightCircle className="w-3 h-3 text-blue-400" />
-                          <span>Дати хід</span>
+                          <span>Дать ход</span>
                         </button>
                       )}
 
@@ -180,7 +180,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                           type="button"
                           onClick={() => onKickPlayer(p.id)}
                           className="p-1 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 transition-colors cursor-pointer"
-                          title="Виключити гравця"
+                          title="Исключить игрока"
                         >
                           <UserMinus className="w-3.5 h-3.5" />
                         </button>

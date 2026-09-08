@@ -33,19 +33,19 @@ export const WordDisplay: React.FC<WordDisplayProps> = ({
               <Sparkles className="w-3.5 h-3.5" />
             </div>
             <span className="font-medium">
-              Слово з <strong className="text-white font-mono font-bold">{totalLetters}</strong> букв
+              Слово из <strong className="text-white font-mono font-bold">{totalLetters}</strong> букв
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-xl bg-[#07090e]/90 border border-white/[0.08] font-mono text-zinc-300 text-xs shadow-inner">
-              Відкрито {isGameOver ? totalLetters : revealedLettersCount} з {totalLetters}
+              Открыто {isGameOver ? totalLetters : revealedLettersCount} из {totalLetters}
             </span>
 
             {isHost && !isGameOver && (
               <span className="hidden sm:flex items-center gap-1.5 text-[11px] px-3 py-1 rounded-xl bg-amber-950/25 text-amber-300 border border-amber-500/30 font-semibold shadow-inner">
                 <Eye className="w-3 h-3 text-amber-400" />
-                Видно лише ведучому
+                Видно только ведущему
               </span>
             )}
           </div>
@@ -76,12 +76,12 @@ export const WordDisplay: React.FC<WordDisplayProps> = ({
               return (
                 <div
                   key={index}
-                  title="Цю букву бачите лише ви"
+                  title="Эту букву видите только вы"
                   className="w-11 h-14 sm:w-14 sm:h-18 md:w-16 md:h-20 rounded-2xl bg-gradient-to-b from-amber-950/25 via-[#131110] to-[#0a0a0b] text-amber-300 font-mono font-bold text-2xl sm:text-3xl md:text-4xl flex flex-col items-center justify-center shadow-inner border border-dashed border-amber-500/40 transition-all select-none relative group hover:border-amber-400/60"
                 >
                   <span className="opacity-90">{letter}</span>
                   <span className="text-[9px] text-amber-400/70 font-sans tracking-tight uppercase font-semibold absolute bottom-1">
-                    приховано
+                    скрыто
                   </span>
                 </div>
               );
@@ -105,7 +105,7 @@ export const WordDisplay: React.FC<WordDisplayProps> = ({
         {/* Prefix Mission Hint Bar */}
         <div className="mt-5 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#07090e]/90 border border-white/[0.07] shadow-inner text-xs text-zinc-400">
-            <span>Всі намёки та слова починаються на:</span>
+            <span>Все намёки и слова начинаются на:</span>
             <span className="font-mono font-black text-sm text-blue-300 bg-blue-500/15 border border-blue-500/30 px-2.5 py-0.5 rounded-lg tracking-wider shadow-[0_0_12px_rgba(59,130,246,0.25)]">
               {secretWord.slice(0, revealedLettersCount)}...
             </span>
