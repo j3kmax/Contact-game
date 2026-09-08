@@ -55,8 +55,8 @@ export const Timer: React.FC<TimerProps> = ({ timerExpiresAt, onExpired, isHost 
     <div
       className={`w-full rounded-3xl p-4 sm:p-5 border transition-all duration-300 relative overflow-hidden specular-border shadow-2xl ${
         isHost
-          ? 'bg-gradient-to-r from-rose-950/70 via-[#260a1e]/95 to-amber-950/60 border-rose-500/60 shadow-[0_0_40px_rgba(244,63,94,0.4)]'
-          : 'bg-gradient-to-r from-[#2a0d3d]/80 via-[#180728]/95 to-[#3b1228]/80 border-orange-400/50 shadow-[0_0_40px_rgba(251,146,60,0.35)]'
+          ? 'bg-gradient-to-r from-rose-950/80 via-[#14050d]/95 to-amber-950/70 border-rose-500/60 shadow-[0_0_40px_rgba(244,63,94,0.4)]'
+          : 'bg-gradient-to-r from-[#072418]/85 via-[#04160e]/95 to-[#092d1e]/85 border-emerald-400/50 shadow-[0_0_40px_rgba(16,185,129,0.35)]'
       }`}
     >
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative z-10">
@@ -65,7 +65,7 @@ export const Timer: React.FC<TimerProps> = ({ timerExpiresAt, onExpired, isHost 
             className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl sm:text-3xl font-mono border transition-all select-none ${
               isUrgent
                 ? 'bg-rose-950/90 border-rose-400 text-rose-200 shadow-[0_0_25px_rgba(244,63,94,0.7)] animate-pulse'
-                : 'bg-[#150624] border-orange-400/60 text-amber-300 shadow-[0_0_20px_rgba(251,146,60,0.4)]'
+                : 'bg-[#061e14] border-emerald-400/60 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.4)]'
             }`}
           >
             {secondsLeft}s
@@ -76,7 +76,7 @@ export const Timer: React.FC<TimerProps> = ({ timerExpiresAt, onExpired, isHost 
               {isHost ? (
                 <AlertTriangle className="w-4 h-4 text-rose-400 animate-bounce" />
               ) : (
-                <Clock className="w-4 h-4 text-orange-400 animate-spin" />
+                <Clock className="w-4 h-4 text-emerald-400 animate-spin" />
               )}
               <h3 className="font-black text-sm sm:text-base text-white tracking-tight">
                 {isHost ? 'ВНИМАНИЕ: ОБЪЯВЛЕН КОНТАКТ!' : 'ИДЕТ ОБРАТНЫЙ ОТСЧЕТ 10 СЕКУНД'}
@@ -91,12 +91,12 @@ export const Timer: React.FC<TimerProps> = ({ timerExpiresAt, onExpired, isHost 
         </div>
 
         {/* High Precision Progress Track */}
-        <div className="w-full sm:w-52 bg-[#120520] rounded-full h-3.5 p-0.5 border border-white/[0.12] overflow-hidden shadow-inner">
+        <div className="w-full sm:w-52 bg-[#03150d] rounded-full h-3.5 p-0.5 border border-emerald-500/25 overflow-hidden shadow-inner">
           <div
             className={`h-full rounded-full transition-all duration-200 ${
               isUrgent
                 ? 'bg-gradient-to-r from-rose-600 via-rose-500 to-amber-400 shadow-[0_0_18px_#f43f5e]'
-                : 'bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-300 shadow-[0_0_16px_#f59e0b]'
+                : 'bg-gradient-to-r from-emerald-400 via-teal-400 to-lime-300 shadow-[0_0_16px_#34d399]'
             }`}
             style={{ width: `${percentage}%` }}
           />

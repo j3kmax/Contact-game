@@ -24,17 +24,17 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
   const getIcon = (type: HistoryItem['type']) => {
     switch (type) {
       case 'question':
-        return <HelpCircle className="w-3.5 h-3.5 text-purple-400" />;
+        return <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />;
       case 'contact':
-        return <Zap className="w-3.5 h-3.5 text-amber-400" />;
+        return <Zap className="w-3.5 h-3.5 text-lime-400" />;
       case 'deflect':
-        return <Shield className="w-3.5 h-3.5 text-rose-400" />;
+        return <Shield className="w-3.5 h-3.5 text-amber-400" />;
       case 'match':
-        return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />;
+        return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />;
       case 'mismatch':
         return <XCircle className="w-3.5 h-3.5 text-rose-400" />;
       case 'guess':
-        return <KeyRound className="w-3.5 h-3.5 text-rose-400" />;
+        return <KeyRound className="w-3.5 h-3.5 text-teal-400" />;
       case 'win':
         return <Trophy className="w-3.5 h-3.5 text-amber-400" />;
       default:
@@ -46,16 +46,17 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
     switch (type) {
       case 'match':
       case 'win':
-        return 'border-l-emerald-500';
+        return 'border-l-emerald-400';
       case 'contact':
-        return 'border-l-amber-500';
+        return 'border-l-lime-400';
       case 'deflect':
+        return 'border-l-amber-500';
       case 'mismatch':
         return 'border-l-rose-500';
       case 'guess':
-        return 'border-l-rose-400';
+        return 'border-l-teal-400';
       default:
-        return 'border-l-purple-500';
+        return 'border-l-emerald-500';
     }
   };
 
@@ -69,14 +70,14 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
       {/* Header */}
       <div
         onClick={() => setIsOpenMobile(!isOpenMobile)}
-        className="px-4 py-3.5 border-b border-white/[0.08] flex items-center justify-between cursor-pointer sm:cursor-default select-none bg-[#140624]/80"
+        className="px-4 py-3.5 border-b border-white/[0.08] flex items-center justify-between cursor-pointer sm:cursor-default select-none bg-[#061e14]/80"
       >
         <div className="flex items-center gap-2">
-          <History className="w-4 h-4 text-rose-400" />
+          <History className="w-4 h-4 text-emerald-400" />
           <h4 className="font-bold text-xs uppercase tracking-wider text-zinc-300 font-mono">
             Хроника событий
           </h4>
-          <span className="px-2 py-0.5 rounded-full bg-[#1b0832] border border-white/[0.08] text-zinc-400 text-[10px] font-mono font-bold">
+          <span className="px-2 py-0.5 rounded-full bg-[#072519] border border-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">
             {history?.length || 0}
           </span>
         </div>
@@ -100,7 +101,7 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
           history.map((item) => (
             <div
               key={item.id}
-              className={`p-2.5 rounded-2xl bg-[#150626]/90 border border-white/[0.08] border-l-2 ${getBorderAccent(
+              className={`p-2.5 rounded-2xl bg-[#061e14]/90 border border-white/[0.08] border-l-2 ${getBorderAccent(
                 item.type
               )} flex items-start gap-2.5 text-xs transition-colors hover:border-white/[0.18] shadow-sm`}
             >

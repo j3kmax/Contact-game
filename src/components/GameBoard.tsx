@@ -99,12 +99,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           <div className="glass-panel-elevated rounded-3xl p-4 sm:p-5 relative overflow-hidden specular-border">
             <div className="flex items-center justify-between mb-3 px-1">
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-blue-400" />
-                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-300 font-mono">
+                <Users className="w-4 h-4 text-emerald-400" />
+                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-100 font-mono">
                   Игроки в раунде ({playersList.length})
                 </h4>
               </div>
-              <span className="text-[10px] text-zinc-500 font-mono">Турнирные баллы</span>
+              <span className="text-[10px] text-emerald-400/60 font-mono">Турнирные баллы</span>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -122,14 +122,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     key={p.id}
                     className={`px-3.5 py-2.5 rounded-2xl border text-xs flex items-center justify-between transition-all ${
                       isTurnPlayer
-                        ? 'bg-gradient-to-r from-rose-950/60 via-purple-950/50 to-pink-950/60 border-rose-400/60 shadow-[0_0_24px_rgba(244,63,94,0.4)] text-rose-100 ring-1 ring-rose-400/50 animate-pulse-subtle'
+                        ? 'bg-gradient-to-r from-emerald-950/70 via-teal-950/60 to-emerald-950/70 border-emerald-400/70 shadow-[0_0_24px_rgba(16,185,129,0.45)] text-emerald-100 ring-1 ring-emerald-400/50 animate-pulse-subtle'
                         : isPlayerLeader
-                        ? 'bg-gradient-to-r from-amber-950/40 via-orange-950/30 to-amber-950/35 border-amber-400/50 text-amber-200 shadow-[0_0_18px_rgba(245,158,11,0.25)]'
+                        ? 'bg-gradient-to-r from-teal-950/40 via-emerald-950/40 to-teal-950/40 border-emerald-400/50 text-emerald-200 shadow-[0_0_18px_rgba(16,185,129,0.25)]'
                         : isPlayerHost
-                        ? 'bg-[#1f0d32]/90 border-amber-400/40 text-amber-100 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
+                        ? 'bg-[#072518]/90 border-amber-400/40 text-amber-100 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
                         : isMe
-                        ? 'bg-[#220d36]/95 border-rose-400/35 text-white shadow-inner'
-                        : 'bg-[#170928]/80 border-white/[0.08] text-rose-100/70 hover:border-rose-400/30'
+                        ? 'bg-[#0a3120]/95 border-emerald-400/35 text-white shadow-inner'
+                        : 'bg-[#04160e]/80 border-white/[0.08] text-emerald-100/70 hover:border-emerald-400/30'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 overflow-hidden">
@@ -139,10 +139,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         </span>
                       ) : isPlayerLeader ? (
                         <span title="Ведущий" className="flex items-center">
-                          <Target className="w-3.5 h-3.5 text-orange-400 drop-shadow-[0_0_6px_rgba(251,146,60,0.7)] shrink-0" />
+                          <Target className="w-3.5 h-3.5 text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.7)] shrink-0" />
                         </span>
                       ) : (
-                        <Gamepad2 className="w-3.5 h-3.5 text-rose-400/60 shrink-0" />
+                        <Gamepad2 className="w-3.5 h-3.5 text-emerald-400/60 shrink-0" />
                       )}
 
                       <span className="font-bold truncate max-w-[110px]">
@@ -151,17 +151,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
                       {/* Status indicator tags */}
                       {isTurnPlayer && (
-                        <span className="text-[10px] text-rose-200 font-extrabold uppercase tracking-wide bg-rose-500/25 px-2 py-0.5 rounded-lg border border-rose-400/50 shadow-[0_0_10px_rgba(244,63,94,0.35)] flex items-center gap-1">
+                        <span className="text-[10px] text-emerald-200 font-extrabold uppercase tracking-wide bg-emerald-500/25 px-2 py-0.5 rounded-lg border border-emerald-400/50 shadow-[0_0_10px_rgba(16,185,129,0.35)] flex items-center gap-1">
                           <span>Ходит</span>
                           {room.turnExpiresAt && (
-                            <span className="font-mono text-amber-300 font-bold">
+                            <span className="font-mono text-lime-300 font-bold">
                               {Math.max(0, Math.ceil((room.turnExpiresAt - now) / 1000))}с
                             </span>
                           )}
                         </span>
                       )}
                       {isQuestionAuthor && (
-                        <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-[0_0_10px_#fb7185] shrink-0" title="Автор намёка" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-lime-400 shadow-[0_0_10px_#a3e635] shrink-0" title="Автор намёка" />
                       )}
                       {isContactPartner && (
                         <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_10px_#f59e0b] animate-ping shrink-0" title="Объявил Контакт" />
@@ -177,16 +177,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         <button
                           type="button"
                           onClick={() => onPassTurnTo(p.id)}
-                          className="px-2 py-1 rounded-xl bg-gradient-to-r from-rose-600/30 to-orange-600/30 hover:from-rose-500/45 hover:to-orange-500/45 text-rose-200 hover:text-white border border-rose-400/45 hover:border-rose-300 text-[10px] font-mono font-bold flex items-center gap-1 transition-all cursor-pointer shadow-[0_0_12px_rgba(244,63,94,0.25)] active:scale-95"
+                          className="px-2 py-1 rounded-xl bg-gradient-to-r from-emerald-600/30 to-teal-600/30 hover:from-emerald-500/45 hover:to-teal-500/45 text-emerald-200 hover:text-white border border-emerald-400/45 hover:border-emerald-300 text-[10px] font-mono font-bold flex items-center gap-1 transition-all cursor-pointer shadow-[0_0_12px_rgba(16,185,129,0.25)] active:scale-95"
                           title={`Передать очередь хода игроку ${p.name}`}
                         >
-                          <ArrowRightCircle className="w-3 h-3 text-rose-300" />
+                          <ArrowRightCircle className="w-3 h-3 text-emerald-300" />
                           <span>Дать ход</span>
                         </button>
                       )}
 
                       {/* Score Badge */}
-                      <span className="px-2.5 py-0.5 rounded-xl bg-[#130722] text-[11px] font-mono font-bold text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]" title="Баллы">
+                      <span className="px-2.5 py-0.5 rounded-xl bg-[#04160e] text-[11px] font-mono font-bold text-lime-300 border border-emerald-400/40 shadow-[0_0_10px_rgba(163,230,53,0.2)]" title="Баллы">
                         {p.score || 0}
                       </span>
 

@@ -86,10 +86,10 @@ export function App() {
   const isInGame = room && room.status !== 'LOBBY' && isUserJoined;
 
   return (
-    <div className="min-h-screen bg-[#0c0416] bg-subtle-grid bg-radial-mesh text-zinc-100 flex flex-col selection:bg-rose-500 selection:text-white relative">
+    <div className="min-h-screen bg-[#030f0a] bg-subtle-grid bg-radial-mesh text-emerald-50 flex flex-col selection:bg-emerald-500 selection:text-white relative">
       {/* Dynamic Ambient Glows */}
-      <div className="fixed top-[-10%] left-1/2 -translate-x-1/2 w-[70vw] h-[50vh] rounded-full bg-rose-600/[0.09] blur-[150px] pointer-events-none" />
-      <div className="fixed bottom-[-10%] right-[-5%] w-[45vw] h-[45vw] rounded-full bg-amber-600/[0.06] blur-[140px] pointer-events-none" />
+      <div className="fixed top-[-10%] left-1/2 -translate-x-1/2 w-[70vw] h-[50vh] rounded-full bg-emerald-500/[0.12] blur-[150px] pointer-events-none" />
+      <div className="fixed bottom-[-10%] right-[-5%] w-[45vw] h-[45vw] rounded-full bg-lime-500/[0.08] blur-[140px] pointer-events-none" />
 
       {/* Main Header */}
       <Header
@@ -104,18 +104,18 @@ export function App() {
         {!roomId ? (
           /* Landing Screen: No Room Selected */
           <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto py-12 text-center animate-fade-in">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-b from-rose-500/25 via-purple-900/30 to-[#120520] border border-rose-500/40 shadow-2xl shadow-rose-950/40 flex items-center justify-center text-rose-400 mb-6 ring-1 ring-rose-400/20">
-              <Gamepad2 className="w-8 h-8 text-rose-400" />
+            <div className="w-16 h-16 rounded-3xl bg-gradient-to-b from-emerald-500/25 via-teal-900/30 to-[#041a10] border border-emerald-500/40 shadow-2xl shadow-emerald-950/40 flex items-center justify-center text-emerald-400 mb-6 ring-1 ring-emerald-400/25">
+              <Gamepad2 className="w-8 h-8 text-emerald-400" />
             </div>
 
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#1b0832] border border-rose-400/20 text-[11px] font-semibold text-rose-300 uppercase tracking-widest mb-3 font-mono shadow-inner">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#072418] border border-emerald-400/25 text-[11px] font-semibold text-emerald-300 uppercase tracking-widest mb-3 font-mono shadow-inner">
               Интеллектуальная онлайн-игра
             </div>
 
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-rose-400 via-orange-300 to-amber-200 mb-3 drop-shadow-[0_0_25px_rgba(244,63,94,0.35)]">
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-lime-300 mb-3 drop-shadow-[0_0_25px_rgba(16,185,129,0.4)]">
               ЕСТЬ КОНТАКТ!
             </h1>
-            <p className="text-sm sm:text-base text-zinc-300 max-w-md mx-auto leading-relaxed mb-8 font-medium">
+            <p className="text-sm sm:text-base text-emerald-100/70 max-w-md mx-auto leading-relaxed mb-8 font-medium">
               Словесная игра на интуицию, ассоциации и командный расчёт.
               Разгадывайте намёки, координируйтесь в голосовом чате и открывайте буквы одну за другой.
             </p>
@@ -124,15 +124,15 @@ export function App() {
             <div className="w-full flex flex-col gap-4">
               <button
                 onClick={() => navigateToRoom(generateRoomId())}
-                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-rose-500 via-orange-500 to-amber-400 hover:from-rose-400 hover:to-amber-300 text-slate-950 font-black text-base shadow-xl shadow-rose-950/50 border border-rose-300/60 flex items-center justify-center gap-2.5 transform transition-all active:scale-[0.99] cursor-pointer specular-border"
+                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-lime-400 hover:from-emerald-300 hover:to-lime-300 text-slate-950 font-black text-base shadow-xl shadow-emerald-950/60 border border-emerald-200/60 flex items-center justify-center gap-2.5 transform transition-all active:scale-[0.99] cursor-pointer specular-border"
               >
                 <Plus className="w-5 h-5 stroke-[2.5]" />
                 <span>Создать новую комнату</span>
               </button>
 
               <div className="relative flex items-center justify-center my-2">
-                <div className="border-t border-white/[0.08] w-full" />
-                <span className="bg-[#0c0416] px-3 text-[11px] uppercase tracking-wider text-zinc-500 font-bold font-mono absolute">
+                <div className="border-t border-emerald-500/20 w-full" />
+                <span className="bg-[#030f0a] px-3 text-[11px] uppercase tracking-wider text-emerald-600 font-bold font-mono absolute">
                   или
                 </span>
               </div>
@@ -149,12 +149,12 @@ export function App() {
                   value={inputCode}
                   onChange={(e) => setInputCode(e.target.value.toUpperCase())}
                   placeholder="ВВЕДИТЕ КОД КОМНАТЫ..."
-                  className="flex-1 px-4 py-3.5 rounded-2xl bg-[#140624] border border-white/[0.1] text-white placeholder-zinc-600 font-mono font-bold tracking-wider focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 text-sm transition-colors shadow-inner"
+                  className="flex-1 px-4 py-3.5 rounded-2xl bg-[#061d13] border border-emerald-500/25 text-emerald-100 placeholder-emerald-700/60 font-mono font-bold tracking-wider focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 text-sm transition-colors shadow-inner"
                 />
                 <button
                   type="submit"
                   disabled={!inputCode.trim()}
-                  className="px-6 py-3.5 rounded-2xl bg-[#1d0a36] hover:bg-[#280e4a] text-zinc-200 border border-white/[0.1] font-bold text-sm flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="px-6 py-3.5 rounded-2xl bg-[#0c3121] hover:bg-[#124630] text-emerald-200 border border-emerald-500/30 font-bold text-sm flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   <span>Войти</span>
                   <ArrowRight className="w-4 h-4" />
@@ -163,7 +163,7 @@ export function App() {
 
               <button
                 onClick={() => setIsRulesOpen(true)}
-                className="mt-2 text-xs text-zinc-400 hover:text-white font-medium transition-colors cursor-pointer"
+                className="mt-2 text-xs text-emerald-400/80 hover:text-emerald-200 font-medium transition-colors cursor-pointer"
               >
                 Правила и механика игры
               </button>
@@ -171,8 +171,8 @@ export function App() {
           </div>
         ) : loading ? (
           /* Room Loading State */
-          <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16 text-zinc-400">
-            <Loader2 className="w-8 h-8 animate-spin text-rose-500" />
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 py-16 text-emerald-400">
+            <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
             <p className="text-sm font-medium font-mono">Подключение к комнате {roomId}...</p>
           </div>
         ) : isInGame ? (
@@ -212,7 +212,7 @@ export function App() {
       </main>
 
       {/* Footer */}
-      <footer className="py-4 border-t border-slate-900 text-center text-xs text-slate-500">
+      <footer className="py-4 border-t border-emerald-950/60 text-center text-xs text-emerald-600/80">
         <p>«Контакт» — сетевая игра в реальном времени • Serverless Architecture (Firebase / Broadcast)</p>
       </footer>
 

@@ -85,7 +85,7 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-lg glass-panel-elevated rounded-3xl p-6 sm:p-7 shadow-[0_0_50px_rgba(244,63,94,0.3),0_20px_50px_rgba(0,0,0,0.85)] border border-rose-500/40 bg-[#140624]/95 relative max-h-[90vh] overflow-y-auto specular-border">
+      <div className="w-full max-w-lg glass-panel-elevated rounded-3xl p-6 sm:p-7 shadow-[0_0_50px_rgba(16,185,129,0.3),0_20px_50px_rgba(0,0,0,0.85)] border border-emerald-500/40 bg-[#061e14]/95 relative max-h-[90vh] overflow-y-auto specular-border">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition-colors cursor-pointer"
@@ -111,8 +111,8 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
           </div>
         </div>
 
-        <div className="p-3 rounded-2xl bg-[#1b0832]/90 border border-white/[0.08] text-xs text-zinc-300 mb-4 flex items-start gap-2.5 leading-relaxed shadow-inner">
-          <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        <div className="p-3 rounded-2xl bg-[#072519]/90 border border-white/[0.08] text-xs text-zinc-300 mb-4 flex items-start gap-2.5 leading-relaxed shadow-inner">
+          <Info className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
           <div>
             В демо-режиме игра синхронизируется между вкладками браузера локально.
             Чтобы играть с друзьями через интернет, укажите данные вашего бесплатного проекта <strong>Firebase Realtime Database</strong>.
@@ -130,12 +130,12 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
               value={jsonInput}
               onChange={(e) => setJsonInput(e.target.value)}
               placeholder='{ "apiKey": "...", "databaseURL": "..." }'
-              className="flex-1 px-3 py-2 text-xs rounded-xl bg-[#140624] text-zinc-200 border border-white/[0.1] font-mono focus:outline-none focus:border-rose-400"
+              className="flex-1 px-3 py-2 text-xs rounded-xl bg-[#04160e] text-zinc-200 border border-white/[0.1] font-mono focus:outline-none focus:border-emerald-400"
             />
             <button
               type="button"
               onClick={handleParseJson}
-              className="px-3 py-2 bg-[#1d0a36] hover:bg-[#280e4a] border border-white/[0.1] text-zinc-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+              className="px-3 py-2 bg-[#072418] hover:bg-[#0a3322] border border-white/[0.1] text-zinc-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
             >
               Заполнить
             </button>
@@ -145,7 +145,7 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
         <form onSubmit={handleSave} className="flex flex-col gap-3">
           <div>
             <label className="block text-xs font-semibold text-zinc-300 mb-1">
-              Database URL (Realtime DB) <span className="text-rose-400">*</span>
+              Database URL (Realtime DB) <span className="text-emerald-400">*</span>
             </label>
             <input
               type="text"
@@ -153,7 +153,7 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
               value={databaseURL}
               onChange={(e) => setDatabaseURL(e.target.value)}
               placeholder="https://your-app-default-rtdb.firebaseio.com"
-              className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#140624] text-white border border-white/[0.1] font-mono focus:ring-1 focus:ring-rose-400 focus:border-rose-400 focus:outline-none"
+              className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#04160e] text-white border border-white/[0.1] font-mono focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:outline-none"
             />
           </div>
 
@@ -167,7 +167,7 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="AIzaSy..."
-                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#140624] text-white border border-white/[0.1] font-mono focus:ring-1 focus:ring-rose-400 focus:border-rose-400 focus:outline-none"
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#04160e] text-white border border-white/[0.1] font-mono focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:outline-none"
               />
             </div>
             <div>
@@ -179,7 +179,7 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
                 value={projectId}
                 onChange={(e) => setProjectId(e.target.value)}
                 placeholder="my-contact-game"
-                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#140624] text-white border border-white/[0.1] font-mono focus:ring-1 focus:ring-rose-400 focus:border-rose-400 focus:outline-none"
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#04160e] text-white border border-white/[0.1] font-mono focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:outline-none"
               />
             </div>
           </div>
@@ -202,13 +202,13 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-xs font-semibold rounded-xl bg-[#1b0832] hover:bg-[#280e4a] border border-white/[0.1] text-zinc-300 transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold rounded-xl bg-[#072519] hover:bg-[#0a3322] border border-white/[0.1] text-zinc-300 transition-colors cursor-pointer"
               >
                 Отмена
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-400 hover:to-amber-400 text-slate-950 flex items-center gap-1.5 shadow-lg shadow-rose-950/40 border border-rose-300/40 transition-all cursor-pointer active:scale-95"
+                className="px-5 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-emerald-400 via-teal-400 to-lime-400 hover:from-emerald-300 hover:to-lime-300 text-slate-950 flex items-center gap-1.5 shadow-lg shadow-emerald-950/40 border border-emerald-300/40 transition-all cursor-pointer active:scale-95"
               >
                 <Check className="w-4 h-4" />
                 <span>Сохранить</span>
@@ -222,7 +222,7 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
             href="https://console.firebase.google.com/"
             target="_blank"
             rel="noreferrer"
-            className="text-[11px] text-rose-400 hover:text-rose-300 inline-flex items-center gap-1 transition-colors font-semibold"
+            className="text-[11px] text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1 transition-colors font-semibold"
           >
             <span>Открыть консоль Firebase</span>
             <ExternalLink className="w-3 h-3" />
