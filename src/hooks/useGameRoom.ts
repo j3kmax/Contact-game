@@ -605,10 +605,13 @@ export function useGameRoom(roomId: string | null) {
     sounds.playPop();
   }, [room, roomId, currentUser, addLog]);
 
-  // 4c. Pass turn to a specific player
+  // 4c. Pass turn to a specific player (Host only)
   const passTurnTo = useCallback(
     async (targetPlayerId: string) => {
       if (!room || !roomId || !currentUser) return;
+      if (currentUser.id !== room.hostId) {
+        throw new Error('Только хост комнаты может передавать очередь хода');
+      }
       if (room.status !== 'QUESTION_PHASE' || room.currentQuestion) {
         throw new Error('Нельзя передавать ход во время активного вопроса или контакта');
       }

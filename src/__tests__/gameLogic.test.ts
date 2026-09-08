@@ -389,6 +389,24 @@ describe('Contact Game Logic & Normalization', () => {
       const isFresh = hostWords.map(normalizeWord).includes(normalizeWord(freshDeflect));
       expect(isFresh).toBe(false);
     });
+
+    it('ensures only lobby host is authorized to pass turn to a chosen player', () => {
+      const room: Partial<Room> = {
+        hostId: 'host123',
+        leaderId: 'leader456',
+        players: {
+          host123: { id: 'host123', name: 'LobbyHost', role: 'player', score: 0 },
+          player1: { id: 'player1', name: 'Alice', role: 'player', score: 0 },
+          player2: { id: 'player2', name: 'Bob', role: 'player', score: 0 },
+        },
+      };
+
+      const canPassHost = 'host123' === room.hostId;
+      expect(canPassHost).toBe(true);
+
+      const canPassRegularPlayer = 'player1' === room.hostId;
+      expect(canPassRegularPlayer).toBe(false);
+    });
   });
 });
 

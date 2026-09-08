@@ -156,8 +156,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
-                      {/* Pass turn to this player */}
-                      {onPassTurnTo && !isPlayerLeader && !isTurnPlayer && !room.currentQuestion && (
+                      {/* Pass turn to this player (Host only) */}
+                      {isLobbyHost && onPassTurnTo && !isPlayerLeader && !isTurnPlayer && !room.currentQuestion && (
                         <button
                           type="button"
                           onClick={() => onPassTurnTo(p.id)}

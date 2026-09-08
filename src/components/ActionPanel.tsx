@@ -55,6 +55,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
 
   const effectiveLeaderId = room.leaderId || room.hostId;
   const isHost = currentUser.id === effectiveLeaderId;
+  const isLobbyHost = currentUser.id === room.hostId;
   const hasActiveQuestion = !!room.currentQuestion;
   const isQuestionAuthor = room.currentQuestion?.authorId === currentUser.id;
   const isContactDeclared = room.status === 'CONTACT_DECLARED';
@@ -562,7 +563,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                       </h4>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      {onPassTurnTo && otherEligiblePlayers.length > 0 && (
+                      {isLobbyHost && onPassTurnTo && otherEligiblePlayers.length > 0 && (
                         <div className="relative">
                           <select
                             defaultValue=""
@@ -573,7 +574,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                               }
                             }}
                             className="px-3 py-1.5 rounded-xl bg-[#07090e] text-blue-300 border border-blue-500/30 text-xs font-semibold cursor-pointer focus:outline-none hover:border-blue-400 transition-colors shadow-inner"
-                            title="Передать очередь хода выбранному игроку"
+                            title="Передать очередь хода выбранному игроку (только хост)"
                           >
                             <option value="" disabled>
                               👉 Передать ход...
