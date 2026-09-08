@@ -100,9 +100,9 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
           history.map((item) => (
             <div
               key={item.id}
-              className={`p-2.5 rounded-xl bg-[#07090e]/90 border border-white/[0.06] border-l-2 ${getBorderAccent(
+              className={`p-2.5 rounded-2xl bg-[#080c20]/90 border border-white/[0.08] border-l-2 ${getBorderAccent(
                 item.type
-              )} flex items-start gap-2.5 text-xs transition-colors hover:border-white/[0.12]`}
+              )} flex items-start gap-2.5 text-xs transition-colors hover:border-white/[0.18] shadow-sm`}
             >
               <div className="mt-0.5 shrink-0">{getIcon(item.type)}</div>
               <div className="flex-1 leading-snug">

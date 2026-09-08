@@ -122,27 +122,27 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     key={p.id}
                     className={`px-3.5 py-2.5 rounded-2xl border text-xs flex items-center justify-between transition-all ${
                       isTurnPlayer
-                        ? 'bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-blue-950/40 border-blue-500/60 shadow-[0_0_18px_-4px_rgba(59,130,246,0.3)] text-blue-100 ring-1 ring-blue-400/40'
+                        ? 'bg-gradient-to-r from-cyan-950/60 via-indigo-950/50 to-blue-950/60 border-cyan-400/60 shadow-[0_0_22px_rgba(6,182,212,0.35)] text-cyan-100 ring-1 ring-cyan-400/50 animate-pulse-subtle'
                         : isPlayerLeader
-                        ? 'bg-amber-950/20 border-amber-500/30 text-amber-200'
+                        ? 'bg-gradient-to-r from-amber-950/35 via-yellow-950/20 to-amber-950/30 border-amber-400/40 text-amber-200 shadow-[0_0_16px_rgba(245,158,11,0.2)]'
                         : isPlayerHost
-                        ? 'bg-[#07090e]/90 border-amber-500/25 text-zinc-200'
+                        ? 'bg-[#0c1024]/90 border-amber-400/35 text-amber-100 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
                         : isMe
-                        ? 'bg-[#07090e]/90 border-white/[0.14] text-white'
-                        : 'bg-[#07090e]/60 border-white/[0.06] text-zinc-300'
+                        ? 'bg-[#0e1329]/95 border-cyan-500/30 text-white shadow-inner'
+                        : 'bg-[#0a0d1f]/80 border-white/[0.08] text-zinc-300 hover:border-white/[0.16]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 overflow-hidden">
                       {isPlayerHost ? (
                         <span title="Хост комнаты" className="flex items-center">
-                          <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <Crown className="w-3.5 h-3.5 text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] shrink-0" />
                         </span>
                       ) : isPlayerLeader ? (
                         <span title="Ведущий" className="flex items-center">
-                          <Target className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <Target className="w-3.5 h-3.5 text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)] shrink-0" />
                         </span>
                       ) : (
-                        <Gamepad2 className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                        <Gamepad2 className="w-3.5 h-3.5 text-cyan-400/60 shrink-0" />
                       )}
 
                       <span className="font-bold truncate max-w-[110px]">
@@ -151,7 +151,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
                       {/* Status indicator tags */}
                       {isTurnPlayer && (
-                        <span className="text-[10px] text-blue-400 font-extrabold uppercase tracking-wide bg-blue-500/15 px-1.5 py-0.5 rounded border border-blue-500/30 flex items-center gap-1">
+                        <span className="text-[10px] text-cyan-300 font-extrabold uppercase tracking-wide bg-cyan-500/20 px-2 py-0.5 rounded-lg border border-cyan-400/40 shadow-[0_0_10px_rgba(6,182,212,0.3)] flex items-center gap-1">
                           <span>Ходит</span>
                           {room.turnExpiresAt && (
                             <span className="font-mono text-amber-300 font-bold">
@@ -161,13 +161,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         </span>
                       )}
                       {isQuestionAuthor && (
-                        <span className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_6px_#60a5fa] shrink-0" title="Автор намёка" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_10px_#22d3ee] shrink-0" title="Автор намёка" />
                       )}
                       {isContactPartner && (
-                        <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" title="Объявил Контакт" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_10px_#f59e0b] animate-ping shrink-0" title="Объявил Контакт" />
                       )}
                       {isAdditionalPartner && (
-                        <span className="w-2 h-2 rounded-full bg-cyan-400 shrink-0" title="Поддержал Контакт" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399] shrink-0" title="Поддержал Контакт" />
                       )}
                     </div>
 
@@ -177,25 +177,45 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         <button
                           type="button"
                           onClick={() => onPassTurnTo(p.id)}
-                          className="px-2 py-0.5 rounded-lg bg-blue-950/60 hover:bg-blue-900/80 text-blue-300 hover:text-white border border-blue-500/30 text-[10px] font-mono font-bold flex items-center gap-1 transition-all cursor-pointer shadow-sm hover:border-blue-400 active:scale-95"
+                          className="px-2 py-1 rounded-xl bg-gradient-to-r from-cyan-600/25 to-blue-600/25 hover:from-cyan-500/40 hover:to-blue-500/40 text-cyan-300 hover:text-white border border-cyan-400/40 hover:border-cyan-300 text-[10px] font-mono font-bold flex items-center gap-1 transition-all cursor-pointer shadow-[0_0_12px_rgba(6,182,212,0.2)] active:scale-95"
                           title={`Передать очередь хода игроку ${p.name}`}
                         >
-                          <ArrowRightCircle className="w-3 h-3 text-blue-400" />
+                          <ArrowRightCircle className="w-3 h-3 text-cyan-400" />
                           <span>Дать ход</span>
                         </button>
                       )}
 
                       {/* Score Badge */}
-                      <span className="px-2 py-0.5 rounded-lg bg-[#07090e] text-[11px] font-mono font-bold text-amber-300 border border-amber-500/30 shadow-inner" title="Баллы">
+                      <span className="px-2.5 py-0.5 rounded-xl bg-[#060814] text-[11px] font-mono font-bold text-amber-300 border border-amber-400/40 shadow-[0_0_10px_rgba(245,158,11,0.2)]" title="Баллы">
                         {p.score || 0}
                       </span>
+
+                      {/* In-game Host transfer action */}
+                      {isLobbyHost && !isMe && onTransferLobbyHost && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(`Передать права хоста комнаты игроку ${p.name}?`)) {
+                              onTransferLobbyHost(p.id);
+                            }
+                          }}
+                          className="p-1.5 rounded-xl text-amber-400 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-400/30 hover:border-amber-400/70 shadow-[0_0_12px_rgba(245,158,11,0.25)] transition-all cursor-pointer active:scale-90"
+                          title={`Передать права хоста комнаты игроку ${p.name}`}
+                        >
+                          <Crown className="w-3.5 h-3.5 fill-amber-400/20" />
+                        </button>
+                      )}
 
                       {/* In-game Host kick action */}
                       {isLobbyHost && !isMe && onKickPlayer && (
                         <button
                           type="button"
-                          onClick={() => onKickPlayer(p.id)}
-                          className="p-1 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 transition-colors cursor-pointer"
+                          onClick={() => {
+                            if (window.confirm(`Исключить игрока ${p.name} из комнаты?`)) {
+                              onKickPlayer(p.id);
+                            }
+                          }}
+                          className="p-1.5 rounded-xl text-zinc-500 hover:text-rose-300 hover:bg-rose-500/20 border border-transparent hover:border-rose-500/40 transition-all cursor-pointer active:scale-90"
                           title="Исключить игрока"
                         >
                           <UserMinus className="w-3.5 h-3.5" />

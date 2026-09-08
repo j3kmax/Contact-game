@@ -177,7 +177,7 @@ export function Lobby({
             <button
               type="submit"
               disabled={!name.trim() || isSubmitting}
-              className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-base shadow-xl shadow-blue-950/50 border border-blue-400/20 transition-all disabled:opacity-40 cursor-pointer active:scale-[0.99]"
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-600 hover:from-cyan-400 hover:to-blue-400 text-white font-black text-base shadow-[0_0_30px_rgba(6,182,212,0.5)] border border-cyan-300/50 transition-all disabled:opacity-40 cursor-pointer active:scale-[0.99]"
             >
               Войти в комнату
             </button>
@@ -185,10 +185,10 @@ export function Lobby({
         </div>
       ) : isLeader ? (
         /* Step 2A: Round Leader start form (Enter or Select Secret Word) */
-        <div className="glass-panel-elevated rounded-3xl p-6 sm:p-8 border border-amber-500/30 shadow-xl specular-border relative overflow-hidden">
+        <div className="glass-panel-elevated rounded-3xl p-6 sm:p-8 border border-amber-400/40 shadow-[0_0_40px_rgba(245,158,11,0.25)] specular-border relative overflow-hidden">
           <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-md">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500/25 to-orange-500/25 border border-amber-400/50 flex items-center justify-center text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
                 <Target className="w-4 h-4" />
               </div>
               <h3 className="text-lg font-bold text-white">Вы ведущий: загадайте тайное слово</h3>
@@ -196,7 +196,7 @@ export function Lobby({
             <button
               type="button"
               onClick={handleRefreshSuggestions}
-              className="px-3 py-1.5 rounded-xl bg-[#07090e] hover:bg-zinc-800 text-amber-300 hover:text-amber-200 border border-amber-500/30 text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer active:scale-95"
+              className="px-3 py-1.5 rounded-xl bg-[#060818] hover:bg-[#121028] text-amber-300 hover:text-amber-200 border border-amber-400/40 text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(245,158,11,0.15)] cursor-pointer active:scale-95"
               title="Получить 5 других случайных слов"
             >
               <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
@@ -204,18 +204,18 @@ export function Lobby({
             </button>
           </div>
 
-          <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
+          <p className="text-xs text-zinc-300 mb-4 leading-relaxed">
             Выберите одно из 5 предложенных проверенных существительных (без ошибок и опечаток) или введите своё:
           </p>
 
           {/* 5 Suggested Words Grid */}
           <div className="mb-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono flex items-center gap-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-300 font-mono flex items-center gap-1.5">
                 <Dices className="w-3.5 h-3.5 text-amber-400" />
                 Случайные варианты на выбор:
               </span>
-              <span className="text-[10px] text-zinc-500 font-mono">Нажмите для выбора</span>
+              <span className="text-[10px] text-zinc-400 font-mono">Нажмите для выбора</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
@@ -226,22 +226,22 @@ export function Lobby({
                     key={w}
                     type="button"
                     onClick={() => handleSelectWord(w)}
-                    className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer shadow-sm active:scale-[0.98] ${
+                    className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer active:scale-[0.98] ${
                       isSelected
-                        ? 'bg-amber-500/20 border-amber-400 text-amber-200 ring-2 ring-amber-400/40 shadow-[0_0_20px_-4px_rgba(245,158,11,0.4)]'
-                        : 'bg-[#07090e]/90 hover:bg-zinc-900 border-white/[0.09] hover:border-amber-500/40 text-white'
+                        ? 'bg-gradient-to-r from-amber-500/25 to-yellow-500/25 border-amber-400 text-amber-200 ring-2 ring-amber-400/50 shadow-[0_0_24px_rgba(245,158,11,0.4)]'
+                        : 'bg-[#090d22]/90 hover:bg-[#121840] border-white/[0.12] hover:border-amber-400/50 text-white shadow-inner'
                     }`}
                   >
                     <div>
                       <div className="font-mono font-black text-sm sm:text-base tracking-wider">
                         {w}
                       </div>
-                      <div className="text-[10px] text-zinc-500 font-mono mt-0.5">
+                      <div className="text-[10px] text-zinc-400 font-mono mt-0.5">
                         {w.length} букв
                       </div>
                     </div>
                     {isSelected ? (
-                      <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0 drop-shadow-[0_0_6px_#f59e0b]" />
                     ) : (
                       <span className="w-4 h-4 rounded-full border border-white/20 shrink-0" />
                     )}
@@ -254,12 +254,12 @@ export function Lobby({
           <form onSubmit={handleStart} className="flex flex-col gap-4">
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 font-mono">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-300 font-mono">
                   Выбранное секретное слово
                 </label>
                 {secretWord && (
-                  <span className="text-[11px] text-amber-300 font-mono">
-                    Первая буква: «<strong>{secretWord[0]}</strong>»
+                  <span className="text-[11px] text-amber-300 font-mono font-bold">
+                    Первая буква: «<strong className="text-amber-200 font-black">{secretWord[0]}</strong>»
                   </span>
                 )}
               </div>
@@ -272,9 +272,9 @@ export function Lobby({
                   setError(null);
                 }}
                 placeholder="ВЫБЕРИТЕ ИЛИ ВВЕДИТЕ СЛОВО..."
-                className="w-full px-4 py-3.5 rounded-2xl bg-[#07090e] text-amber-300 placeholder-zinc-700 border border-white/[0.09] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-xl sm:text-2xl font-black tracking-widest uppercase font-mono text-center transition-colors shadow-inner"
+                className="w-full px-4 py-3.5 rounded-2xl bg-[#060818] text-amber-200 placeholder-zinc-700 border border-amber-400/40 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/50 text-xl sm:text-2xl font-black tracking-widest uppercase font-mono text-center transition-all shadow-[0_0_20px_rgba(245,158,11,0.15)]"
               />
-              <p className="text-[11px] text-zinc-500 mt-1.5 text-center font-mono">
+              <p className="text-[11px] text-zinc-400 mt-1.5 text-center font-mono">
                 Игрокам откроется только первая буква • От 3 букв
               </p>
             </div>
@@ -289,7 +289,7 @@ export function Lobby({
             <button
               type="submit"
               disabled={secretWord.trim().length < 3 || isSubmitting}
-              className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-xl shadow-amber-500/20 border border-amber-400/40 flex items-center justify-center gap-2 transition-all disabled:opacity-40 cursor-pointer active:scale-[0.99]"
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-lg shadow-[0_0_35px_rgba(245,158,11,0.65)] border border-amber-300/80 flex items-center justify-center gap-2 transition-all disabled:opacity-40 cursor-pointer active:scale-[0.99]"
             >
               <Play className="w-5 h-5 fill-current" />
               <span>Начать игру с этим словом</span>

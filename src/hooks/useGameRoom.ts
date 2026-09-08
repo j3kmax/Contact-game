@@ -322,7 +322,7 @@ export function useGameRoom(roomId: string | null) {
     [room, roomId, currentUser, addLog]
   );
 
-  // 1c. Transfer Lobby Host (Host only)
+  // 1c. Transfer Lobby Host (Host only) - can be called in Lobby or during an active game
   const transferLobbyHost = useCallback(
     async (newHostId: string) => {
       if (!room || !roomId || !currentUser) return;
@@ -334,23 +334,31 @@ export function useGameRoom(roomId: string | null) {
       }
 
       const targetName = room.players[newHostId].name;
+      const isGameActive = room.status !== 'LOBBY';
 
-      // Update player roles in room.players as well
+      // Update player roles in room.players
+      // If game is in progress: preserve the current round leader (who conceived the secret word),
+      // while hostId becomes newHostId.
+      // If in lobby: newHostId becomes both host and default round leader.
       const updatedPlayers: Record<string, Player> = {};
       for (const [id, p] of Object.entries(room.players)) {
         updatedPlayers[id] = {
           ...p,
-          role: id === newHostId ? 'host' : 'player',
+          role: isGameActive
+            ? (id === (room.leaderId || room.hostId) ? 'host' : 'player')
+            : (id === newHostId ? 'host' : 'player'),
         };
       }
 
       const updates: Partial<Room> = {
         hostId: newHostId,
-        leaderId: newHostId,
+        leaderId: isGameActive ? (room.leaderId || room.hostId) : newHostId,
         players: updatedPlayers,
         historyLog: addLog(
           room.historyLog,
-          `👑 Права хоста лобби и ведущего переданы игроку ${targetName}!`,
+          isGameActive
+            ? `👑 Хост комнаты передан игроку ${targetName} прямо во время игры!`
+            : `👑 Права хоста лобби и ведущего переданы игроку ${targetName}!`,
           'info'
         ),
       };

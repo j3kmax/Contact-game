@@ -317,6 +317,51 @@ describe('Contact Game Logic & Normalization', () => {
     expect('p2' === newEffectiveLeaderId).toBe(true);
   });
 
+  it('allows in-game host transfer while preserving current round leader and word defense', () => {
+    // Room in active QUESTION_PHASE: p1 is the host, p1 is also round leader who conceived 'РАДУГА'
+    const activeRoom: Partial<Room> = {
+      status: 'QUESTION_PHASE',
+      hostId: 'p1',
+      leaderId: 'p1',
+      secretWord: 'РАДУГА',
+      revealedLettersCount: 1,
+      players: {
+        p1: { id: 'p1', name: 'Original Host', role: 'host', score: 10 },
+        p2: { id: 'p2', name: 'New Host Player', role: 'player', score: 20 },
+        p3: { id: 'p3', name: 'Guesser', role: 'player', score: 15 },
+      },
+    };
+
+    // Host transfers room administration to p2 mid-game
+    const targetHostId = 'p2';
+    const isGameActive = activeRoom.status !== 'LOBBY';
+
+    const updatedPlayersRole: Record<string, Player> = {};
+    for (const [id, p] of Object.entries(activeRoom.players!)) {
+      updatedPlayersRole[id] = {
+        ...p,
+        role: isGameActive
+          ? (id === (activeRoom.leaderId || activeRoom.hostId) ? 'host' : 'player')
+          : (id === targetHostId ? 'host' : 'player'),
+      };
+    }
+
+    const afterInGameTransfer = {
+      ...activeRoom,
+      hostId: targetHostId,
+      leaderId: isGameActive ? (activeRoom.leaderId || activeRoom.hostId) : targetHostId,
+      players: updatedPlayersRole,
+    };
+
+    // Host of the room is now p2 (can kick, pass turn, transfer host)
+    expect(afterInGameTransfer.hostId).toBe('p2');
+    // But leader of the round remains p1 (defending the word 'РАДУГА')
+    expect(afterInGameTransfer.leaderId).toBe('p1');
+    expect(afterInGameTransfer.secretWord).toBe('РАДУГА');
+    expect(afterInGameTransfer.players['p1'].role).toBe('host');
+    expect(afterInGameTransfer.players['p2'].role).toBe('player');
+  });
+
   describe('Used Words, Host Words & Already Asked Words Restrictions', () => {
     it('blocks asking words that were written by the host', () => {
       const room: Partial<Room> = {

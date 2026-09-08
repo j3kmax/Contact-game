@@ -10,28 +10,30 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-xl glass-panel-glow rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-800/90 bg-[#0d111c]/95 relative max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in">
+      <div className="w-full max-w-xl glass-panel-elevated rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(6,182,212,0.25),0_20px_50px_rgba(0,0,0,0.85)] border border-cyan-400/40 relative max-h-[90vh] overflow-y-auto specular-border">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-11 h-11 rounded-2xl bg-blue-600/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
-            <HelpCircle className="w-5 h-5" />
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-500/25 to-blue-500/25 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.35)] shrink-0">
+            <HelpCircle className="w-5 h-5 drop-shadow-[0_0_6px_#22d3ee]" />
           </div>
           <div>
-            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">Правила игры «Контакт»</h3>
-            <p className="text-xs text-slate-400">Для голосового чата (Discord) с системой баллов</p>
+            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-fuchsia-300 bg-clip-text text-transparent">
+              Правила игры «Контакт»
+            </h3>
+            <p className="text-xs text-zinc-300">Для голосового чата (Discord) с системой турнирных баллов</p>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3.5 text-xs sm:text-sm text-slate-300 leading-relaxed">
+        <div className="flex flex-col gap-3.5 text-xs sm:text-sm text-zinc-300 leading-relaxed">
           {/* Rule 1 */}
-          <div className="p-4 rounded-2xl bg-[#090b10]/90 border border-slate-800/80 flex gap-3">
+          <div className="p-4 rounded-2xl bg-[#060818]/90 border border-white/[0.08] flex gap-3 shadow-inner">
             <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
               <Shield className="w-4 h-4" />
             </div>
