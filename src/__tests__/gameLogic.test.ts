@@ -408,5 +408,133 @@ describe('Contact Game Logic & Normalization', () => {
       expect(canPassRegularPlayer).toBe(false);
     });
   });
+
+  describe('10-Second Turn Rotation & Timeout Mechanism', () => {
+    const TURN_DURATION_MS = 10000;
+
+    it('calculates turn expiration timestamp exactly 10 seconds into the future', () => {
+      const now = 1700000000000;
+      const turnExpiresAt = now + TURN_DURATION_MS;
+      expect(turnExpiresAt - now).toBe(10000);
+    });
+
+    it('detects when 10-second turn limit has expired and advances turn to next player', () => {
+      const now = 1700000010500;
+      const room: Partial<Room> = {
+        status: 'QUESTION_PHASE',
+        currentQuestion: null,
+        activePlayerId: 'p1',
+        turnOrder: ['p1', 'p2', 'p3'],
+        turnExpiresAt: 1700000010000, // expired 500ms ago
+        players: {
+          host: { id: 'host', name: 'Host', role: 'host', score: 0 },
+          p1: { id: 'p1', name: 'Alice', role: 'player', score: 0 },
+          p2: { id: 'p2', name: 'Bob', role: 'player', score: 0 },
+          p3: { id: 'p3', name: 'Charlie', role: 'player', score: 0 },
+        },
+      };
+
+      const isExpired = !!(room.turnExpiresAt && now >= room.turnExpiresAt);
+      expect(isExpired).toBe(true);
+
+      // Advance turn on timeout
+      const { activePlayerId, turnOrder } = getNextTurn(room);
+      expect(activePlayerId).toBe('p2');
+      expect(turnOrder).toEqual(['p1', 'p2', 'p3']);
+
+      // Next player gets fresh 10s
+      const nextTurnExpiresAt = activePlayerId ? now + TURN_DURATION_MS : null;
+      expect(nextTurnExpiresAt).toBe(now + 10000);
+    });
+
+    it('pauses turn timer when question is asked (turnExpiresAt set to null)', () => {
+      const room: Partial<Room> = {
+        status: 'QUESTION_PHASE',
+        currentQuestion: null,
+        activePlayerId: 'p1',
+        turnExpiresAt: 1700000010000,
+      };
+
+      // Player submits question
+      const questionAskedUpdates: Partial<Room> = {
+        currentQuestion: {
+          authorId: 'p1',
+          authorName: 'Alice',
+          intendedWord: 'ПАРОХОД',
+          text: 'Голосовой намёк в Discord',
+        },
+        turnExpiresAt: null, // Timer paused while question is in play
+      };
+
+      expect(questionAskedUpdates.turnExpiresAt).toBeNull();
+      expect(questionAskedUpdates.currentQuestion).toBeDefined();
+    });
+
+    it('resumes 10-second timer for the next player when question is canceled or resolved', () => {
+      const now = 1700000050000;
+      const room: Partial<Room> = {
+        status: 'QUESTION_PHASE',
+        activePlayerId: 'p1',
+        turnOrder: ['p1', 'p2', 'p3'],
+        players: {
+          host: { id: 'host', name: 'Host', role: 'host', score: 0 },
+          p1: { id: 'p1', name: 'Alice', role: 'player', score: 0 },
+          p2: { id: 'p2', name: 'Bob', role: 'player', score: 0 },
+          p3: { id: 'p3', name: 'Charlie', role: 'player', score: 0 },
+        },
+      };
+
+      // Turn rotates to next player and resets timer to 10s
+      const { activePlayerId, turnOrder } = getNextTurn(room);
+      const updates: Partial<Room> = {
+        activePlayerId,
+        turnOrder,
+        turnExpiresAt: activePlayerId ? now + TURN_DURATION_MS : null,
+      };
+
+      expect(updates.activePlayerId).toBe('p2');
+      expect(updates.turnExpiresAt).toBe(now + 10000);
+    });
+
+    it('handles consecutive turn timeouts in full cycle among players', () => {
+      let currentTime = 1700000000000;
+      const room: Partial<Room> = {
+        status: 'QUESTION_PHASE',
+        currentQuestion: null,
+        activePlayerId: 'p1',
+        turnOrder: ['p1', 'p2', 'p3'],
+        turnExpiresAt: currentTime + TURN_DURATION_MS,
+        players: {
+          host: { id: 'host', name: 'Host', role: 'host', score: 0 },
+          p1: { id: 'p1', name: 'Alice', role: 'player', score: 0 },
+          p2: { id: 'p2', name: 'Bob', role: 'player', score: 0 },
+          p3: { id: 'p3', name: 'Charlie', role: 'player', score: 0 },
+        },
+      };
+
+      // 10s pass -> p1 times out -> turn to p2
+      currentTime += 10000;
+      expect(currentTime >= room.turnExpiresAt!).toBe(true);
+      const turn1 = getNextTurn(room);
+      expect(turn1.activePlayerId).toBe('p2');
+      room.activePlayerId = turn1.activePlayerId;
+      room.turnExpiresAt = currentTime + TURN_DURATION_MS;
+
+      // Another 10s pass -> p2 times out -> turn to p3
+      currentTime += 10000;
+      expect(currentTime >= room.turnExpiresAt!).toBe(true);
+      const turn2 = getNextTurn(room);
+      expect(turn2.activePlayerId).toBe('p3');
+      room.activePlayerId = turn2.activePlayerId;
+      room.turnExpiresAt = currentTime + TURN_DURATION_MS;
+
+      // Another 10s pass -> p3 times out -> turn wraps back to p1
+      currentTime += 10000;
+      expect(currentTime >= room.turnExpiresAt!).toBe(true);
+      const turn3 = getNextTurn(room);
+      expect(turn3.activePlayerId).toBe('p1');
+    });
+  });
 });
+
 

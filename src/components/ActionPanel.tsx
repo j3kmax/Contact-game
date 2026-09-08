@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Shield, Zap, XCircle, KeyRound, AlertCircle, CheckCircle2, Lock, Flag, Users, Mic, SkipForward } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Shield, Zap, XCircle, KeyRound, AlertCircle, CheckCircle2, Lock, Flag, Users, Mic, SkipForward, Clock } from 'lucide-react';
 import { Room, Player } from '../types/game';
 import { Timer } from './Timer';
+import { sounds } from '../services/sound';
 
 interface ActionPanelProps {
   room: Room;
@@ -83,6 +84,32 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   // Turn management
   const isMyTurn = !room.activePlayerId || room.activePlayerId === currentUser.id;
   const activePlayerName = room.activePlayerId ? (room.players?.[room.activePlayerId]?.name || 'Игрок') : null;
+
+  // 10s Turn timer countdown
+  const [turnSecondsLeft, setTurnSecondsLeft] = useState<number>(10);
+  const lastTurnTicked = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!room.turnExpiresAt || hasActiveQuestion || room.status !== 'QUESTION_PHASE') {
+      lastTurnTicked.current = null;
+      return;
+    }
+
+    const updateSeconds = () => {
+      const remainingMs = room.turnExpiresAt! - Date.now();
+      const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+      setTurnSecondsLeft(remainingSec);
+
+      if (isMyTurn && remainingSec > 0 && remainingSec <= 3 && remainingSec !== lastTurnTicked.current) {
+        lastTurnTicked.current = remainingSec;
+        sounds.playTick(true);
+      }
+    };
+
+    updateSeconds();
+    const interval = setInterval(updateSeconds, 150);
+    return () => clearInterval(interval);
+  }, [room.turnExpiresAt, hasActiveQuestion, room.status, isMyTurn]);
 
   const isPrimaryPartner = room.contactData?.partnerId === currentUser.id;
   const hasJoinedContact =
@@ -317,11 +344,19 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       {isHost ? (
         /* HOST VIEW */
         <div className="glass-panel-elevated rounded-3xl p-5 sm:p-7 border border-amber-500/30 relative overflow-hidden specular-border">
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <Shield className="w-4 h-4" />
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                <Shield className="w-4 h-4" />
+              </div>
+              <h3 className="font-bold text-base text-white">Панель ведущего: Отбитие («Это не...»)</h3>
             </div>
-            <h3 className="font-bold text-base text-white">Панель ведущего: Отбитие («Это не...»)</h3>
+            {room.status === 'QUESTION_PHASE' && !hasActiveQuestion && room.activePlayerId && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#07090e] border border-amber-500/30 text-xs font-mono text-amber-300 shadow-inner">
+                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <span>Ход: <strong className="text-white">{activePlayerName}</strong> ({turnSecondsLeft}с)</span>
+              </div>
+            )}
           </div>
 
           <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
@@ -553,16 +588,54 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
               {isMyTurn ? (
                 /* Current player's turn to speak in Discord & lock in secret word */
                 <div className="glass-panel-elevated rounded-3xl p-5 sm:p-7 border border-blue-500/30 relative overflow-hidden specular-border animate-fade-in">
-                  <div className="flex items-center justify-between mb-3.5">
+                  {/* 10s Turn Progress Bar */}
+                  {room.turnExpiresAt && (
+                    <div className="w-full bg-black/40 h-1.5 rounded-full overflow-hidden mb-4 border border-white/[0.05]">
+                      <div
+                        className={`h-full transition-all duration-200 rounded-full ${
+                          turnSecondsLeft <= 3
+                            ? 'bg-gradient-to-r from-rose-600 to-red-500 shadow-[0_0_12px_rgba(244,63,94,0.6)]'
+                            : turnSecondsLeft <= 6
+                            ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
+                            : 'bg-gradient-to-r from-blue-600 to-cyan-400'
+                        }`}
+                        style={{ width: `${Math.min(100, Math.max(0, (turnSecondsLeft / 10) * 100))}%` }}
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between mb-3.5 flex-wrap gap-2">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/30 flex items-center justify-center shadow-md">
                         <Mic className="w-4 h-4 animate-pulse" />
                       </div>
-                      <h4 className="font-bold text-base text-white">
-                        Ваша очередь загадывать намёк!
-                      </h4>
+                      <div>
+                        <h4 className="font-bold text-base text-white">
+                          Ваша очередь загадывать намёк!
+                        </h4>
+                        <p className="text-[11px] text-zinc-400">
+                          На ход даётся <strong className="text-white">10 секунд</strong>. Если не успеть — ход переходит дальше.
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
+                      {/* 10s Countdown Badge */}
+                      {room.turnExpiresAt && (
+                        <div
+                          className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 text-xs font-mono font-bold transition-all shadow-inner ${
+                            turnSecondsLeft <= 3
+                              ? 'bg-rose-950/60 text-rose-300 border-rose-500/50 animate-pulse shadow-rose-950/50'
+                              : turnSecondsLeft <= 6
+                              ? 'bg-amber-950/50 text-amber-300 border-amber-500/40'
+                              : 'bg-blue-950/50 text-blue-300 border-blue-500/40'
+                          }`}
+                          title="Оставшееся время на озвучивание намёка и ввод слова"
+                        >
+                          <Clock className={`w-3.5 h-3.5 ${turnSecondsLeft <= 3 ? 'text-rose-400 animate-spin' : 'text-blue-400'}`} />
+                          <span>{turnSecondsLeft}с</span>
+                        </div>
+                      )}
+
                       {isLobbyHost && onPassTurnTo && otherEligiblePlayers.length > 0 && (
                         <div className="relative">
                           <select
@@ -666,8 +739,19 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                   <h4 className="text-base sm:text-lg font-black text-white mb-1 tracking-tight">
                     Очередь игрока: <span className="text-blue-400">{activePlayerName}</span>
                   </h4>
+                  {room.turnExpiresAt && (
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#07090e] border border-white/[0.09] text-xs font-mono text-zinc-300 my-2 shadow-inner">
+                      <Clock className={`w-3.5 h-3.5 ${turnSecondsLeft <= 3 ? 'text-rose-400 animate-pulse' : 'text-blue-400'}`} />
+                      <span>
+                        Осталось времени на ход:{' '}
+                        <strong className={turnSecondsLeft <= 3 ? 'text-rose-400 font-bold' : 'text-blue-300'}>
+                          {turnSecondsLeft} сек
+                        </strong>
+                      </span>
+                    </div>
+                  )}
                   <p className="text-xs text-zinc-400 max-w-md mx-auto mb-1 leading-relaxed">
-                    Слушайте намёк в Discord / голосовом чате. Как только он загадает слово, появится кнопка «ЕСТЬ КОНТАКТ!».
+                    Слушайте намёк в Discord / голосовом чате. Если игрок не загадает слово за 10 секунд, ход автоматически перейдёт к следующему.
                   </p>
                 </div>
               )}

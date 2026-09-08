@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Room, Player } from '../types/game';
 import { WordDisplay } from './WordDisplay';
 import { ActionPanel } from './ActionPanel';
 import { HistoryLog } from './HistoryLog';
 import { DirectGuessModal } from './DirectGuessModal';
 import { GameOverModal } from './GameOverModal';
-import { Crown, Gamepad2, Users, Target, UserMinus, ArrowRightCircle } from 'lucide-react';
+import { Crown, Gamepad2, Users, Target, UserMinus, ArrowRightCircle, Clock } from 'lucide-react';
 
 interface GameBoardProps {
   room: Room;
@@ -50,6 +50,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   const playersList = Object.values(room.players || {});
   const effectiveLeaderId = room.leaderId || room.hostId;
   const isLobbyHost = currentUser.id === room.hostId;
+
+  // Turn ticker for real-time display in player list
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!room.turnExpiresAt || room.currentQuestion || room.status !== 'QUESTION_PHASE') return;
+    const interval = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(interval);
+  }, [room.turnExpiresAt, room.currentQuestion, room.status]);
 
   return (
     <div className="w-full max-w-6xl mx-auto flex flex-col gap-6 py-2 sm:py-4">
@@ -140,8 +148,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
                       {/* Status indicator tags */}
                       {isTurnPlayer && (
-                        <span className="text-[10px] text-blue-400 font-extrabold uppercase tracking-wide bg-blue-500/15 px-1.5 py-0.5 rounded border border-blue-500/30">
-                          Ходит
+                        <span className="text-[10px] text-blue-400 font-extrabold uppercase tracking-wide bg-blue-500/15 px-1.5 py-0.5 rounded border border-blue-500/30 flex items-center gap-1">
+                          <span>Ходит</span>
+                          {room.turnExpiresAt && (
+                            <span className="font-mono text-amber-300 font-bold">
+                              {Math.max(0, Math.ceil((room.turnExpiresAt - now) / 1000))}с
+                            </span>
+                          )}
                         </span>
                       )}
                       {isQuestionAuthor && (

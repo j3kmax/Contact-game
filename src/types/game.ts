@@ -75,6 +75,7 @@ export interface Room {
   historyLog: HistoryItem[];
   activePlayerId?: string | null;
   turnOrder?: string[];
+  turnExpiresAt?: number | null; // Timestamp ms when active player's 10s turn expires
   directGuessCooldowns?: Record<string, number>; // playerId -> expiry timestamp ms
   hostWords?: string[]; // Words written/deflected by the host
   askedWords?: string[]; // Words previously asked by players (intended words)
