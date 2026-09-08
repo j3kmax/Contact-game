@@ -17,6 +17,7 @@ interface ActionPanelProps {
   onDeflect: (word: string) => Promise<{ success: boolean; matched: boolean; error?: string }>;
   onAcceptDeflect: () => Promise<void>;
   onTimerExpired: () => void;
+  onTurnTimeout?: () => void;
   onOpenDirectGuess: () => void;
 }
 
@@ -33,6 +34,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   onDeflect,
   onAcceptDeflect,
   onTimerExpired,
+  onTurnTimeout,
   onOpenDirectGuess,
 }) => {
   // Single field for secret word
@@ -85,9 +87,15 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   const isMyTurn = !room.activePlayerId || room.activePlayerId === currentUser.id;
   const activePlayerName = room.activePlayerId ? (room.players?.[room.activePlayerId]?.name || 'Игрок') : null;
 
-  // 10s Turn timer countdown
-  const [turnSecondsLeft, setTurnSecondsLeft] = useState<number>(10);
+  // 20s Turn timer countdown
+  const [turnSecondsLeft, setTurnSecondsLeft] = useState<number>(20);
   const lastTurnTicked = useRef<number | null>(null);
+
+  // Clear unsubmitted text when turn changes
+  useEffect(() => {
+    setIntendedWord('');
+    setAskError(null);
+  }, [room.activePlayerId]);
 
   useEffect(() => {
     if (!room.turnExpiresAt || hasActiveQuestion || room.status !== 'QUESTION_PHASE') {
@@ -104,12 +112,16 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
         lastTurnTicked.current = remainingSec;
         sounds.playTick(true);
       }
+
+      if (remainingMs <= 0) {
+        onTurnTimeout?.();
+      }
     };
 
     updateSeconds();
-    const interval = setInterval(updateSeconds, 150);
+    const interval = setInterval(updateSeconds, 100);
     return () => clearInterval(interval);
-  }, [room.turnExpiresAt, hasActiveQuestion, room.status, isMyTurn]);
+  }, [room.turnExpiresAt, hasActiveQuestion, room.status, isMyTurn, onTurnTimeout]);
 
   const isPrimaryPartner = room.contactData?.partnerId === currentUser.id;
   const hasJoinedContact =
@@ -588,18 +600,18 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
               {isMyTurn ? (
                 /* Current player's turn to speak in Discord & lock in secret word */
                 <div className="glass-panel-elevated rounded-3xl p-5 sm:p-7 border border-blue-500/30 relative overflow-hidden specular-border animate-fade-in">
-                  {/* 10s Turn Progress Bar */}
+                  {/* 20s Turn Progress Bar */}
                   {room.turnExpiresAt && (
                     <div className="w-full bg-black/40 h-1.5 rounded-full overflow-hidden mb-4 border border-white/[0.05]">
                       <div
-                        className={`h-full transition-all duration-200 rounded-full ${
+                        className={`h-full transition-all duration-150 rounded-full ${
                           turnSecondsLeft <= 3
                             ? 'bg-gradient-to-r from-rose-600 to-red-500 shadow-[0_0_12px_rgba(244,63,94,0.6)]'
                             : turnSecondsLeft <= 6
                             ? 'bg-gradient-to-r from-amber-500 to-yellow-400'
                             : 'bg-gradient-to-r from-blue-600 to-cyan-400'
                         }`}
-                        style={{ width: `${Math.min(100, Math.max(0, (turnSecondsLeft / 10) * 100))}%` }}
+                        style={{ width: `${Math.min(100, Math.max(0, (turnSecondsLeft / 20) * 100))}%` }}
                       />
                     </div>
                   )}
@@ -614,7 +626,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                           Ваша очередь загадывать намёк!
                         </h4>
                         <p className="text-[11px] text-zinc-400">
-                          На ход даётся <strong className="text-white">10 секунд</strong>. Если не успеть — ход переходит дальше.
+                          На ход даётся <strong className="text-white">20 секунд</strong>. Если не успеть — ход переходит дальше.
                         </p>
                       </div>
                     </div>
@@ -751,7 +763,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                     </div>
                   )}
                   <p className="text-xs text-zinc-400 max-w-md mx-auto mb-1 leading-relaxed">
-                    Слушайте намёк в Discord / голосовом чате. Если игрок не загадает слово за 10 секунд, ход автоматически перейдёт к следующему.
+                    Слушайте намёк в Discord / голосовом чате. Если игрок не загадает слово за 20 секунд, ход автоматически перейдёт к следующему.
                   </p>
                 </div>
               )}

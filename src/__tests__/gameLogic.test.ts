@@ -409,23 +409,23 @@ describe('Contact Game Logic & Normalization', () => {
     });
   });
 
-  describe('10-Second Turn Rotation & Timeout Mechanism', () => {
-    const TURN_DURATION_MS = 10000;
+  describe('20-Second Turn Rotation & Timeout Mechanism', () => {
+    const TURN_DURATION_MS = 20000;
 
-    it('calculates turn expiration timestamp exactly 10 seconds into the future', () => {
+    it('calculates turn expiration timestamp exactly 20 seconds into the future', () => {
       const now = 1700000000000;
       const turnExpiresAt = now + TURN_DURATION_MS;
-      expect(turnExpiresAt - now).toBe(10000);
+      expect(turnExpiresAt - now).toBe(20000);
     });
 
-    it('detects when 10-second turn limit has expired and advances turn to next player', () => {
-      const now = 1700000010500;
+    it('detects when 20-second turn limit has expired and advances turn to next player', () => {
+      const now = 1700000020500;
       const room: Partial<Room> = {
         status: 'QUESTION_PHASE',
         currentQuestion: null,
         activePlayerId: 'p1',
         turnOrder: ['p1', 'p2', 'p3'],
-        turnExpiresAt: 1700000010000, // expired 500ms ago
+        turnExpiresAt: 1700000020000, // expired 500ms ago
         players: {
           host: { id: 'host', name: 'Host', role: 'host', score: 0 },
           p1: { id: 'p1', name: 'Alice', role: 'player', score: 0 },
@@ -442,9 +442,9 @@ describe('Contact Game Logic & Normalization', () => {
       expect(activePlayerId).toBe('p2');
       expect(turnOrder).toEqual(['p1', 'p2', 'p3']);
 
-      // Next player gets fresh 10s
+      // Next player gets fresh 20s
       const nextTurnExpiresAt = activePlayerId ? now + TURN_DURATION_MS : null;
-      expect(nextTurnExpiresAt).toBe(now + 10000);
+      expect(nextTurnExpiresAt).toBe(now + 20000);
     });
 
     it('pauses turn timer when question is asked (turnExpiresAt set to null)', () => {
@@ -452,7 +452,7 @@ describe('Contact Game Logic & Normalization', () => {
         status: 'QUESTION_PHASE',
         currentQuestion: null,
         activePlayerId: 'p1',
-        turnExpiresAt: 1700000010000,
+        turnExpiresAt: 1700000020000,
       };
 
       // Player submits question
@@ -470,7 +470,7 @@ describe('Contact Game Logic & Normalization', () => {
       expect(questionAskedUpdates.currentQuestion).toBeDefined();
     });
 
-    it('resumes 10-second timer for the next player when question is canceled or resolved', () => {
+    it('resumes 20-second timer for the next player when question is canceled or resolved', () => {
       const now = 1700000050000;
       const room: Partial<Room> = {
         status: 'QUESTION_PHASE',
@@ -484,7 +484,7 @@ describe('Contact Game Logic & Normalization', () => {
         },
       };
 
-      // Turn rotates to next player and resets timer to 10s
+      // Turn rotates to next player and resets timer to 20s
       const { activePlayerId, turnOrder } = getNextTurn(room);
       const updates: Partial<Room> = {
         activePlayerId,
@@ -493,10 +493,10 @@ describe('Contact Game Logic & Normalization', () => {
       };
 
       expect(updates.activePlayerId).toBe('p2');
-      expect(updates.turnExpiresAt).toBe(now + 10000);
+      expect(updates.turnExpiresAt).toBe(now + 20000);
     });
 
-    it('handles consecutive turn timeouts in full cycle among players', () => {
+    it('handles consecutive turn timeouts in full cycle among players with 20s each', () => {
       let currentTime = 1700000000000;
       const room: Partial<Room> = {
         status: 'QUESTION_PHASE',
@@ -512,24 +512,24 @@ describe('Contact Game Logic & Normalization', () => {
         },
       };
 
-      // 10s pass -> p1 times out -> turn to p2
-      currentTime += 10000;
+      // 20s pass -> p1 times out -> turn to p2
+      currentTime += 20000;
       expect(currentTime >= room.turnExpiresAt!).toBe(true);
       const turn1 = getNextTurn(room);
       expect(turn1.activePlayerId).toBe('p2');
       room.activePlayerId = turn1.activePlayerId;
       room.turnExpiresAt = currentTime + TURN_DURATION_MS;
 
-      // Another 10s pass -> p2 times out -> turn to p3
-      currentTime += 10000;
+      // Another 20s pass -> p2 times out -> turn to p3
+      currentTime += 20000;
       expect(currentTime >= room.turnExpiresAt!).toBe(true);
       const turn2 = getNextTurn(room);
       expect(turn2.activePlayerId).toBe('p3');
       room.activePlayerId = turn2.activePlayerId;
       room.turnExpiresAt = currentTime + TURN_DURATION_MS;
 
-      // Another 10s pass -> p3 times out -> turn wraps back to p1
-      currentTime += 10000;
+      // Another 20s pass -> p3 times out -> turn wraps back to p1
+      currentTime += 20000;
       expect(currentTime >= room.turnExpiresAt!).toBe(true);
       const turn3 = getNextTurn(room);
       expect(turn3.activePlayerId).toBe('p1');

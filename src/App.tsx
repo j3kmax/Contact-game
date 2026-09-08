@@ -77,6 +77,7 @@ export function App() {
     deflect,
     acceptDeflect,
     handleTimerExpired,
+    handleTurnTimeout,
     directGuess,
     restartGame,
   } = useGameRoom(roomId);
@@ -188,6 +189,7 @@ export function App() {
             onDeflect={deflect}
             onAcceptDeflect={acceptDeflect}
             onTimerExpired={handleTimerExpired}
+            onTurnTimeout={handleTurnTimeout}
             onDirectGuess={directGuess}
             onRestartGame={restartGame}
             onKickPlayer={kickPlayer}

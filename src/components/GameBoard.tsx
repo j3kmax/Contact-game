@@ -20,6 +20,7 @@ interface GameBoardProps {
   onDeflect: (word: string) => Promise<{ success: boolean; matched: boolean; error?: string }>;
   onAcceptDeflect: () => Promise<void>;
   onTimerExpired: () => void;
+  onTurnTimeout?: () => void;
   onDirectGuess: (word: string) => Promise<{ correct: boolean; message: string }>;
   onRestartGame: () => Promise<void>;
   onKickPlayer?: (playerId: string) => Promise<void>;
@@ -39,6 +40,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   onDeflect,
   onAcceptDeflect,
   onTimerExpired,
+  onTurnTimeout,
   onDirectGuess,
   onRestartGame,
   onKickPlayer,
@@ -86,6 +88,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             onDeflect={onDeflect}
             onAcceptDeflect={onAcceptDeflect}
             onTimerExpired={onTimerExpired}
+            onTurnTimeout={onTurnTimeout}
             onOpenDirectGuess={() => setIsDirectGuessOpen(true)}
           />
         </div>

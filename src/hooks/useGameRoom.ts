@@ -11,6 +11,8 @@ function normalizeWord(str: string): string {
     .replace(/[^а-яa-z0-9]/gi, '');
 }
 
+const TURN_DURATION_MS = 20000; // 20 seconds limit per player turn
+
 // Helper to advance the turn to the next player (excluding round leader)
 function getNextTurn(room: Room): { activePlayerId: string | null; turnOrder: string[] } {
   const leaderId = room.leaderId || room.hostId;
@@ -262,7 +264,7 @@ export function useGameRoom(roomId: string | null) {
         players: updatedPlayers,
         turnOrder: newTurnOrder,
         activePlayerId: newActivePlayerId,
-        turnExpiresAt: (room.status === 'QUESTION_PHASE' && !room.currentQuestion && newActivePlayerId) ? Date.now() + 10000 : room.turnExpiresAt,
+        turnExpiresAt: (room.status === 'QUESTION_PHASE' && !room.currentQuestion && newActivePlayerId) ? Date.now() + TURN_DURATION_MS : room.turnExpiresAt,
       };
 
       // If kicked player was leader, reassign leader to host
@@ -442,7 +444,7 @@ export function useGameRoom(roomId: string | null) {
         players: updatedPlayers,
         activePlayerId: initialActivePlayerId,
         turnOrder: playerIds,
-        turnExpiresAt: initialActivePlayerId ? Date.now() + 10000 : null,
+        turnExpiresAt: initialActivePlayerId ? Date.now() + TURN_DURATION_MS : null,
         winner: null,
         historyLog: addLog(
           room.historyLog,
@@ -562,7 +564,7 @@ export function useGameRoom(roomId: string | null) {
       status: 'QUESTION_PHASE',
       activePlayerId,
       turnOrder,
-      turnExpiresAt: activePlayerId ? Date.now() + 10000 : null,
+      turnExpiresAt: activePlayerId ? Date.now() + TURN_DURATION_MS : null,
       askedWords: newAsked,
       usedWords: newUsed,
       historyLog: addLog(
@@ -597,7 +599,7 @@ export function useGameRoom(roomId: string | null) {
     const updates: Partial<Room> = {
       activePlayerId,
       turnOrder,
-      turnExpiresAt: activePlayerId ? Date.now() + 10000 : null,
+      turnExpiresAt: activePlayerId ? Date.now() + TURN_DURATION_MS : null,
       historyLog: addLog(
         room.historyLog,
         `⏭️ ${currentUser.name} передал свой ход. Теперь очередь загадывать у ${nextName}.`,
@@ -647,7 +649,7 @@ export function useGameRoom(roomId: string | null) {
       const updates: Partial<Room> = {
         activePlayerId: targetPlayerId,
         turnOrder: existingOrder,
-        turnExpiresAt: targetPlayerId ? Date.now() + 10000 : null,
+        turnExpiresAt: targetPlayerId ? Date.now() + TURN_DURATION_MS : null,
         historyLog: addLog(
           room.historyLog,
           `👉 ${currentUser.name} передал очередь хода игроку ${targetPlayer.name}.`,
@@ -662,46 +664,46 @@ export function useGameRoom(roomId: string | null) {
     [room, roomId, currentUser, addLog]
   );
 
-  // 4d. Auto-advance turn if active player does not submit a question within 10 seconds
+  const isTimeoutInProgressRef = useRef(false);
+
+  // 4d. Auto-advance turn if active player does not submit a question within 20 seconds
   const handleTurnTimeout = useCallback(async () => {
     if (!room || !roomId) return;
     if (room.status !== 'QUESTION_PHASE' || room.currentQuestion) return;
     if (!room.turnExpiresAt || Date.now() < room.turnExpiresAt) return;
+    if (isTimeoutInProgressRef.current) return;
 
-    // To prevent race conditions / duplicate updates from multiple connected clients:
-    // 1) Active player's client has primary authority.
-    // 2) If active player's tab is closed or throttled, host/round leader takes over after a 500ms grace buffer.
-    const isCurrentActive = currentUser?.id === room.activePlayerId;
-    const effectiveLeaderId = room.leaderId || room.hostId;
-    const isHostOrLeader = currentUser?.id === room.hostId || currentUser?.id === effectiveLeaderId;
-    const bufferExpired = Date.now() >= room.turnExpiresAt + 500;
+    isTimeoutInProgressRef.current = true;
+    try {
+      const prevActivePlayer = room.activePlayerId ? room.players?.[room.activePlayerId] : null;
+      const prevName = prevActivePlayer?.name || 'Игрок';
 
-    if (!isCurrentActive && (!isHostOrLeader || !bufferExpired)) {
-      return;
+      const { activePlayerId, turnOrder } = getNextTurn(room);
+      const nextName = activePlayerId ? (room.players?.[activePlayerId]?.name || 'следующего игрока') : 'следующего игрока';
+
+      const updates: Partial<Room> = {
+        activePlayerId,
+        turnOrder,
+        turnExpiresAt: activePlayerId ? Date.now() + TURN_DURATION_MS : null,
+        historyLog: addLog(
+          room.historyLog,
+          `⏰ Время на ход игрока ${prevName} вышло (20 сек). Ход переходит к ${nextName}.`,
+          'info'
+        ),
+      };
+
+      await gameStorage.updateRoom(roomId, updates);
+      sounds.playTick(true);
+    } catch (e) {
+      console.error('Failed to advance turn on timeout', e);
+    } finally {
+      setTimeout(() => {
+        isTimeoutInProgressRef.current = false;
+      }, 500);
     }
+  }, [room, roomId, addLog]);
 
-    const prevActivePlayer = room.activePlayerId ? room.players?.[room.activePlayerId] : null;
-    const prevName = prevActivePlayer?.name || 'Игрок';
-
-    const { activePlayerId, turnOrder } = getNextTurn(room);
-    const nextName = activePlayerId ? (room.players?.[activePlayerId]?.name || 'следующего игрока') : 'следующего игрока';
-
-    const updates: Partial<Room> = {
-      activePlayerId,
-      turnOrder,
-      turnExpiresAt: activePlayerId ? Date.now() + 10000 : null,
-      historyLog: addLog(
-        room.historyLog,
-        `⏰ Время на ход игрока ${prevName} вышло (10 сек). Ход переходит к ${nextName}.`,
-        'info'
-      ),
-    };
-
-    await gameStorage.updateRoom(roomId, updates);
-    sounds.playTick(true);
-  }, [room, roomId, currentUser, addLog]);
-
-  // Turn timer watcher (auto timeout after 10s)
+  // Turn timer watcher (reliable 200ms interval check)
   useEffect(() => {
     if (
       room?.status === 'QUESTION_PHASE' &&
@@ -709,12 +711,13 @@ export function useGameRoom(roomId: string | null) {
       room.turnExpiresAt &&
       room.activePlayerId
     ) {
-      const delay = Math.max(0, room.turnExpiresAt - Date.now());
-      const timer = setTimeout(() => {
-        handleTurnTimeout();
-      }, delay + 50);
+      const interval = setInterval(() => {
+        if (room.turnExpiresAt && Date.now() >= room.turnExpiresAt) {
+          handleTurnTimeout();
+        }
+      }, 200);
 
-      return () => clearTimeout(timer);
+      return () => clearInterval(interval);
     }
   }, [
     room?.status,
@@ -741,7 +744,7 @@ export function useGameRoom(roomId: string | null) {
         currentUser?.id === room.activePlayerId;
       if (canInit) {
         gameStorage.updateRoom(roomId, {
-          turnExpiresAt: Date.now() + 10000,
+          turnExpiresAt: Date.now() + TURN_DURATION_MS,
         });
       }
     }
@@ -944,7 +947,7 @@ export function useGameRoom(roomId: string | null) {
           players: updatedPlayers,
           activePlayerId,
           turnOrder,
-          turnExpiresAt: activePlayerId ? Date.now() + 10000 : null,
+          turnExpiresAt: activePlayerId ? Date.now() + TURN_DURATION_MS : null,
           hostWords: newHostWords,
           askedWords: newAsked,
           usedWords: [...new Set(newUsedWords)],
@@ -1021,7 +1024,7 @@ export function useGameRoom(roomId: string | null) {
       players: updatedPlayers,
       activePlayerId,
       turnOrder,
-      turnExpiresAt: activePlayerId ? Date.now() + 10000 : null,
+      turnExpiresAt: activePlayerId ? Date.now() + TURN_DURATION_MS : null,
       hostWords: newHost,
       askedWords: newAsked,
       usedWords: newUsed,
@@ -1050,7 +1053,7 @@ export function useGameRoom(roomId: string | null) {
         lastDeflectAttempt: null,
         activePlayerId,
         turnOrder,
-        turnExpiresAt: activePlayerId ? Date.now() + 10000 : null,
+        turnExpiresAt: activePlayerId ? Date.now() + TURN_DURATION_MS : null,
       });
       return;
     }
@@ -1121,7 +1124,7 @@ export function useGameRoom(roomId: string | null) {
         players: updatedPlayers,
         activePlayerId,
         turnOrder,
-        turnExpiresAt: isGameOver ? null : (activePlayerId ? Date.now() + 10000 : null),
+        turnExpiresAt: isGameOver ? null : (activePlayerId ? Date.now() + TURN_DURATION_MS : null),
         askedWords: newAsked,
         usedWords: newUsed,
         historyLog: addLog(room.historyLog, logMsg, 'match'),
@@ -1149,7 +1152,7 @@ export function useGameRoom(roomId: string | null) {
         lastDeflectAttempt: null,
         activePlayerId,
         turnOrder,
-        turnExpiresAt: activePlayerId ? Date.now() + 10000 : null,
+        turnExpiresAt: activePlayerId ? Date.now() + TURN_DURATION_MS : null,
         askedWords: newAsked,
         usedWords: newUsed,
         historyLog: addLog(room.historyLog, failMsg, 'mismatch'),
