@@ -82,10 +82,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         {/* Right 1 col: Players list & History Feed */}
         <div className="flex flex-col gap-4">
           {/* Active Players Widget */}
-          <div className="glass-panel rounded-2xl p-4 border border-slate-800">
+          <div className="glass-panel rounded-2xl p-4 border border-slate-800/80 bg-[#0d111c]/90">
             <div className="flex items-center justify-between mb-2.5 px-1">
               <div className="flex items-center gap-2">
-                <Users className="w-3.5 h-3.5 text-indigo-400" />
+                <Users className="w-3.5 h-3.5 text-blue-400" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
                   Игроки в раунде ({playersList.length})
                 </h4>
@@ -107,14 +107,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     key={p.id}
                     className={`px-3 py-2 rounded-xl border text-xs flex items-center justify-between transition-all ${
                       isPlayerLeader
-                        ? 'bg-purple-950/40 border-purple-600/30 text-purple-200'
+                        ? 'bg-amber-950/20 border-amber-500/30 text-amber-200'
                         : isPlayerHost
-                        ? 'bg-amber-950/40 border-amber-600/30 text-amber-200'
+                        ? 'bg-slate-900/80 border-slate-700/60 text-slate-200'
                         : isTurnPlayer
-                        ? 'bg-gradient-to-r from-indigo-950/90 to-purple-950/90 border-indigo-400 shadow-md shadow-indigo-500/20 text-indigo-200 ring-1 ring-indigo-400/50'
+                        ? 'bg-blue-950/40 border-blue-500/50 text-blue-100 shadow-sm shadow-blue-950/40 ring-1 ring-blue-500/40'
                         : isMe
-                        ? 'bg-indigo-950/60 border-indigo-500/50 text-indigo-200'
-                        : 'bg-slate-900/60 border-slate-800 text-slate-300'
+                        ? 'bg-slate-800/50 border-slate-700/70 text-slate-100'
+                        : 'bg-[#090b10]/90 border-slate-800/80 text-slate-300'
                     }`}
                   >
                     <div className="flex items-center gap-2 overflow-hidden">
@@ -124,10 +124,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         </span>
                       ) : isPlayerLeader ? (
                         <span title="Ведущий" className="flex items-center">
-                          <Target className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                          <Target className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                         </span>
                       ) : (
-                        <Gamepad2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                        <Gamepad2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       )}
 
                       <span className="font-semibold truncate max-w-[110px]">
@@ -136,10 +136,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
                       {/* Status indicator tags */}
                       {isTurnPlayer && (
-                        <span className="text-[10px] text-indigo-300 font-bold">Ходит</span>
+                        <span className="text-[10px] text-blue-400 font-bold">Ходит</span>
                       )}
                       {isQuestionAuthor && (
-                        <span className="w-2 h-2 rounded-full bg-indigo-400 shrink-0" title="Автор вопроса" />
+                        <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0" title="Автор вопроса" />
                       )}
                       {isContactPartner && (
                         <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" title="Объявил Контакт" />
@@ -151,7 +151,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       {/* Score Badge */}
-                      <span className="px-1.5 py-0.5 rounded-md bg-slate-950/80 text-[10px] font-mono font-bold text-amber-300 border border-amber-500/20" title="Баллы">
+                      <span className="px-1.5 py-0.5 rounded-md bg-[#090b10] text-[10px] font-mono font-bold text-amber-300 border border-amber-500/25" title="Баллы">
                         {p.score || 0}
                       </span>
 
@@ -160,7 +160,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                         <button
                           type="button"
                           onClick={() => onKickPlayer(p.id)}
-                          className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 transition-colors"
+                          className="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-950/30 transition-colors"
                           title="Исключить игрока"
                         >
                           <UserMinus className="w-3 h-3" />

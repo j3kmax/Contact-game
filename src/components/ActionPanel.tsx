@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shield, Zap, XCircle, KeyRound, AlertCircle, CheckCircle2, Lock, Flag, Users, Mic, SkipForward } from 'lucide-react';
 import { Room, Player } from '../types/game';
 import { Timer } from './Timer';
@@ -61,7 +61,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   // Direct guess cooldown calculation
   const [remainingCooldownSec, setRemainingCooldownSec] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkCooldown = () => {
       const cooldownUntil = room.directGuessCooldowns?.[currentUser.id] || 0;
       const now = Date.now();
@@ -179,26 +179,26 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
 
       {/* 2. Active Question Card (if any) */}
       {hasActiveQuestion && (
-        <div className="glass-panel rounded-2xl p-5 border border-indigo-500/30 relative overflow-hidden">
+        <div className="glass-panel rounded-2xl p-5 border border-blue-500/30 relative overflow-hidden bg-gradient-to-b from-blue-950/15 via-zinc-900/70 to-zinc-950/90">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-300 shrink-0 mt-0.5 animate-pulse">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0 mt-0.5 animate-pulse">
                 <Mic className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-indigo-300">
-                    Голосовой намёк от {room.currentQuestion!.authorName}
+                  <span className="text-xs font-semibold uppercase tracking-wider text-blue-300 font-mono">
+                    Голосовой намёк: {room.currentQuestion!.authorName}
                   </span>
                   {isQuestionAuthor && (
-                    <span className="text-[10px] bg-indigo-900/60 text-indigo-200 px-2 py-0.5 rounded-full border border-indigo-700/50 flex items-center gap-1">
+                    <span className="text-[10px] bg-zinc-900 text-blue-300 px-2.5 py-0.5 rounded-md border border-zinc-700 font-mono flex items-center gap-1">
                       <Lock className="w-2.5 h-2.5" />
                       Загадано: «{room.currentQuestion!.intendedWord}»
                     </span>
                   )}
                 </div>
                 <p className="text-base sm:text-lg font-medium text-white mt-1 flex items-center gap-2">
-                  <span>🎙️ Слушайте намёк в Discord / войсе!</span>
+                  <span>🎙️ Слушайте намёк в Discord / голосовом чате</span>
                 </p>
               </div>
             </div>
@@ -207,7 +207,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
             {(isQuestionAuthor || isHost) && (
               <button
                 onClick={() => onCancelQuestion()}
-                className="self-end sm:self-center px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-rose-950/60 text-slate-400 hover:text-rose-300 border border-slate-700/60 hover:border-rose-800/50 text-xs font-medium flex items-center gap-1.5 transition-colors"
+                className="self-end sm:self-center px-3 py-1.5 rounded-xl bg-zinc-900/90 hover:bg-rose-950/60 text-zinc-400 hover:text-rose-300 border border-zinc-800 hover:border-rose-800/50 text-xs font-medium flex items-center gap-1.5 transition-colors"
                 title={isHost ? 'Сбросить вопрос' : 'Снять вопрос'}
               >
                 <XCircle className="w-3.5 h-3.5" />
@@ -218,20 +218,20 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
 
           {/* Contact declared indicator inside question card */}
           {isContactDeclared && (
-            <div className="mt-3 pt-3 border-t border-slate-800 text-xs text-amber-300 flex flex-col gap-1.5">
+            <div className="mt-3 pt-3 border-t border-zinc-800 text-xs text-amber-300 flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-amber-400 animate-bounce" />
                 <span>
                   <strong>{room.contactData?.partnerName}</strong> объявил контакт!
-                  {isHost ? ' Отгадайте слово или сдайтесь!' : ' Ведущий пытается отгадать...'}
+                  {isHost ? ' Отгадайте задуманное слово или сдайтесь!' : ' Ведущий пытается отгадать...'}
                 </span>
               </div>
               {/* Additional partners list */}
               {room.contactData?.additionalPartners && room.contactData.additionalPartners.length > 0 && (
-                <div className="flex items-center gap-1.5 text-cyan-300 text-[11px] pl-6">
-                  <Users className="w-3.5 h-3.5 text-cyan-400" />
+                <div className="flex items-center gap-1.5 text-zinc-400 text-[11px] pl-6 font-mono">
+                  <Users className="w-3.5 h-3.5 text-zinc-400" />
                   <span>
-                    Также поддержали: <strong>{room.contactData.additionalPartners.map((p) => p.name).join(', ')}</strong>
+                    Поддержали контакт: <strong className="text-zinc-200">{room.contactData.additionalPartners.map((p) => p.name).join(', ')}</strong>
                   </span>
                 </div>
               )}
@@ -240,20 +240,20 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
 
           {/* Host recent attempt & Author confirmation button */}
           {room.lastDeflectAttempt && (
-            <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-              <div className="text-amber-300/90 flex items-center gap-1.5">
+            <div className="mt-3 pt-3 border-t border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+              <div className="text-zinc-400 flex items-center gap-1.5">
                 <span>Последняя догадка ведущего:</span>
-                <strong className="text-white font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-700">
+                <strong className="text-white font-mono bg-zinc-950 px-2 py-0.5 rounded border border-zinc-800">
                   «{room.lastDeflectAttempt.word}»
                 </strong>
-                <span className="text-slate-400">(не совпало)</span>
+                <span className="text-zinc-500">(не совпало)</span>
               </div>
 
               {/* Author can accept if host named a synonym/valid interpretation */}
               {isQuestionAuthor && (
                 <button
                   onClick={() => onAcceptDeflect()}
-                  className="self-start sm:self-auto px-3 py-1 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-600/40 text-xs font-medium flex items-center gap-1.5 transition-colors"
+                  className="self-start sm:self-auto px-3 py-1 rounded-xl bg-emerald-950/50 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-600/40 text-xs font-medium flex items-center gap-1.5 transition-colors"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Слово подходит (засчитать отбитие)</span>
@@ -267,23 +267,23 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       {/* 3. Role-Based Controls */}
       {isHost ? (
         /* HOST VIEW */
-        <div className="glass-panel rounded-2xl p-5 sm:p-6 border border-amber-500/30">
+        <div className="glass-panel rounded-2xl p-5 sm:p-6 border border-amber-500/30 bg-gradient-to-b from-amber-950/15 via-zinc-900/70 to-zinc-950/90">
           <div className="flex items-center gap-2.5 mb-2">
             <Shield className="w-5 h-5 text-amber-400" />
             <h3 className="font-bold text-base text-white">Панель ведущего: Отбитие («Это не...»)</h3>
           </div>
 
-          <p className="text-xs text-slate-300 mb-4">
+          <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
             {isContactDeclared
-              ? 'Контакт объявлен! Срочно отгадайте задуманное слово или нажмите «Сдаюсь» (+10 очков при успешном отбитии):'
-              : 'Слушайте намёк в Discord и отгадайте слово («Это не...») до того, как кто-то нажмет Контакт (+10 очков):'}
+              ? 'Контакт объявлен! Назовите задуманное слово до истечения таймера (+10 очков при успехе):'
+              : 'Слушайте намёк в Discord и отбейте слово («Это не...») до нажатия Контакта (+10 очков):'}
             {' '}Слово на букву:{' '}
             <strong className="text-amber-300 font-mono text-sm">{revealedPrefix}...</strong>
           </p>
 
           <form onSubmit={handleDeflectSubmit} className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium select-none">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-zinc-500 font-medium select-none font-mono">
                 Это не
               </span>
               <input
@@ -295,14 +295,14 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                 }}
                 disabled={!hasActiveQuestion}
                 placeholder={hasActiveQuestion ? `${revealedPrefix}...` : 'Ждите голосового намёка'}
-                className="w-full pl-20 pr-4 py-3 rounded-xl bg-slate-900/90 text-white placeholder-slate-500 border border-slate-700/80 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full pl-20 pr-4 py-3 rounded-xl bg-zinc-950 text-white placeholder-zinc-700 border border-zinc-800 focus:outline-none focus:border-amber-500/80 focus:ring-1 focus:ring-amber-500/40 font-semibold font-mono disabled:opacity-40 transition-colors"
               />
             </div>
 
             <button
               type="submit"
               disabled={!hasActiveQuestion || !deflectWord.trim() || isSubmitting}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-zinc-950 font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-950/40 border border-amber-400/30 disabled:opacity-40 transition-all"
             >
               <Shield className="w-4 h-4" />
               <span>Отбить!</span>
@@ -310,7 +310,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
           </form>
 
           {deflectFeedback && (
-            <div className="mt-2.5 text-xs text-amber-300 bg-amber-950/40 p-2.5 rounded-xl border border-amber-800/40 flex items-center gap-1.5 animate-fade-in">
+            <div className="mt-2.5 text-xs text-amber-300 bg-amber-950/40 p-2.5 rounded-xl border border-amber-800/40 flex items-center gap-1.5 animate-fade-in font-medium">
               <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
               <span>{deflectFeedback.message}</span>
             </div>
@@ -318,14 +318,14 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
 
           {/* Early surrender button for host during declared contact */}
           {isContactDeclared && (
-            <div className="mt-4 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="text-xs text-slate-400">
-                Не знаете слово? Сдайтесь, чтобы сразу сверить слова и открыть букву без ожидания 10 секунд:
+            <div className="mt-4 pt-4 border-t border-zinc-800/90 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-zinc-400">
+                Не знаете слово? Сдайтесь, чтобы сразу открыть букву без ожидания 10 секунд:
               </div>
               <button
                 type="button"
                 onClick={onHostGiveUp}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-rose-950/80 text-rose-300 hover:text-rose-200 border border-rose-600/30 text-xs font-bold flex items-center justify-center gap-2 transition-colors shrink-0 shadow-md"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-rose-950/70 text-rose-300 hover:text-rose-200 border border-rose-800/40 text-xs font-semibold flex items-center justify-center gap-2 transition-colors shrink-0 shadow-md"
               >
                 <Flag className="w-3.5 h-3.5" />
                 <span>Сдаюсь (Не знаю слово)</span>
@@ -346,14 +346,14 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                     setContactWord(revealedPrefix);
                     setContactError(null);
                   }}
-                  className="w-full py-5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xl sm:text-2xl tracking-wide uppercase shadow-2xl shadow-emerald-500/30 flex items-center justify-center gap-3 transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] animate-pulse-fast border-2 border-emerald-300/40"
+                  className="w-full py-5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xl sm:text-2xl tracking-wider uppercase shadow-2xl shadow-emerald-950/50 flex items-center justify-center gap-3 transform transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] border border-emerald-400/30"
                 >
                   <Zap className="w-7 h-7 fill-current" />
                   <span>ЕСТЬ КОНТАКТ!</span>
                 </button>
               ) : (
                 /* Instant Word Input Form for declaring contact */
-                <div className="glass-panel-glow rounded-2xl p-5 sm:p-6 border border-emerald-500/40 bg-gradient-to-br from-emerald-950/40 via-slate-900/90 to-teal-950/40 animate-fade-in">
+                <div className="glass-panel rounded-2xl p-5 sm:p-6 border border-emerald-500/40 bg-gradient-to-b from-emerald-950/20 via-zinc-900/80 to-zinc-950/90 animate-fade-in">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2 text-emerald-400 font-bold text-base">
                       <Zap className="w-5 h-5 fill-emerald-400" />
@@ -365,13 +365,13 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                         setIsDeclaringContact(false);
                         setContactError(null);
                       }}
-                      className="text-xs text-slate-400 hover:text-white px-2.5 py-1 rounded-lg hover:bg-slate-800 transition-colors"
+                      className="text-xs text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg hover:bg-zinc-800 transition-colors"
                     >
                       Отмена
                     </button>
                   </div>
 
-                  <p className="text-xs text-slate-300 mb-3">
+                  <p className="text-xs text-zinc-300 mb-3">
                     Какое слово вы поняли по голосовому намёку автора?
                     Оно должно начинаться на: <strong className="text-emerald-300 font-mono text-sm">{revealedPrefix}...</strong>
                   </p>
@@ -386,20 +386,20 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                         setContactError(null);
                       }}
                       placeholder={`Слово на ${revealedPrefix}...`}
-                      className="flex-1 px-4 py-3 rounded-xl bg-slate-950/90 text-emerald-300 font-mono font-bold text-base uppercase border border-emerald-500/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-slate-600"
+                      className="flex-1 px-4 py-3 rounded-xl bg-zinc-950 text-emerald-300 font-mono font-bold text-base uppercase border border-emerald-500/40 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 placeholder-zinc-700"
                     />
                     <button
                       type="submit"
                       disabled={!contactWord.trim() || isSubmitting}
-                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-sm uppercase shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+                      className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm uppercase shadow-lg shadow-emerald-950/50 border border-emerald-400/30 flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
                     >
                       <Zap className="w-4 h-4 fill-current" />
-                      <span>Подтвердить контакт (+10 очков)</span>
+                      <span>Подтвердить (+10 очков)</span>
                     </button>
                   </form>
 
                   {contactError && (
-                    <div className="mt-2.5 text-xs text-rose-400 flex items-center gap-1.5">
+                    <div className="mt-2.5 text-xs text-rose-300 flex items-center gap-1.5 p-2 rounded-lg bg-rose-950/40 border border-rose-900/50">
                       <AlertCircle className="w-4 h-4 shrink-0" />
                       <span>{contactError}</span>
                     </div>
@@ -413,14 +413,14 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
           {hasActiveQuestion && isContactDeclared && !isQuestionAuthor && (
             <div>
               {hasJoinedContact ? (
-                <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 flex items-center gap-3">
+                <div className="p-4 rounded-2xl bg-zinc-900/90 border border-emerald-500/40 flex items-center gap-3">
                   <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
                   <div>
-                    <div className="text-sm font-bold text-emerald-200">
+                    <div className="text-sm font-bold text-emerald-300">
                       {isPrimaryPartner ? 'Вы объявили контакт (+10 очков при совпадении)!' : 'Вы поддержали контакт (+5 очков при совпадении)!'}
                     </div>
-                    <div className="text-xs text-slate-300">
-                      Ваше слово: <strong className="font-mono text-emerald-300">«{room.submissions?.[currentUser.id] || '—'}»</strong>.
+                    <div className="text-xs text-zinc-400 mt-0.5">
+                      Ваше слово: <strong className="font-mono text-zinc-100">«{room.submissions?.[currentUser.id] || '—'}»</strong>.
                       Ожидаем окончания отсчёта или решения ведущего...
                     </div>
                   </div>
@@ -433,16 +433,16 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                     setJoinWord(revealedPrefix);
                     setJoinError(null);
                   }}
-                  className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-500 hover:to-blue-500 text-white font-bold text-base sm:text-lg shadow-xl shadow-teal-500/20 flex items-center justify-center gap-2.5 transition-all transform hover:scale-[1.01] active:scale-[0.99] border border-cyan-400/30"
+                  className="w-full py-4 px-6 rounded-2xl bg-zinc-900 hover:bg-zinc-850 text-zinc-100 font-bold text-base sm:text-lg shadow-xl shadow-black/40 flex items-center justify-center gap-2.5 transition-all border border-zinc-700/60"
                 >
-                  <Users className="w-5 h-5 text-cyan-200" />
-                  <span>🤝 Я тоже знаю! Присоединиться к контакту (+5 очков)</span>
+                  <Users className="w-5 h-5 text-blue-400" />
+                  <span>Я тоже знаю! Присоединиться к контакту (+5 очков)</span>
                 </button>
               ) : (
                 /* Form for other players to enter their word */
-                <div className="glass-panel-glow rounded-2xl p-5 border border-cyan-500/40 bg-gradient-to-br from-cyan-950/40 via-slate-900/90 to-blue-950/40 animate-fade-in">
+                <div className="glass-panel rounded-2xl p-5 border border-blue-500/40 bg-gradient-to-b from-blue-950/20 via-zinc-900/80 to-zinc-950/90 animate-fade-in">
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
+                    <div className="flex items-center gap-2 text-blue-300 font-bold text-sm">
                       <Users className="w-4 h-4" />
                       <span>ПОДДЕРЖАТЬ КОНТАКТ (+5 ОЧКОВ)</span>
                     </div>
@@ -452,15 +452,15 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                         setIsJoiningContact(false);
                         setJoinError(null);
                       }}
-                      className="text-xs text-slate-400 hover:text-white px-2.5 py-1 rounded-lg hover:bg-slate-800 transition-colors"
+                      className="text-xs text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg hover:bg-zinc-800 transition-colors"
                     >
                       Отмена
                     </button>
                   </div>
 
-                  <p className="text-xs text-slate-300 mb-3">
+                  <p className="text-xs text-zinc-300 mb-3">
                     Внимание: по правилам, <strong>все поддержавшие игроки</strong> должны правильно отгадать слово автора.
-                    Если кто-то ошибётся — буква не откроется! Слово на: <strong className="text-cyan-300 font-mono">{revealedPrefix}...</strong>
+                    Если кто-то ошибётся — буква не откроется! Слово на: <strong className="text-blue-300 font-mono">{revealedPrefix}...</strong>
                   </p>
 
                   <form onSubmit={handleJoinContactSubmit} className="flex flex-col sm:flex-row gap-2">
@@ -473,12 +473,12 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                         setJoinError(null);
                       }}
                       placeholder={`Ваше слово (${revealedPrefix}...)...`}
-                      className="flex-1 px-4 py-3 rounded-xl bg-slate-950/90 text-cyan-200 font-mono font-bold text-base uppercase border border-cyan-500/40 focus:outline-none focus:ring-2 focus:ring-cyan-500 placeholder-slate-600"
+                      className="flex-1 px-4 py-3 rounded-xl bg-zinc-950 text-blue-300 font-mono font-bold text-base uppercase border border-blue-500/40 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 placeholder-zinc-700"
                     />
                     <button
                       type="submit"
                       disabled={!joinWord.trim() || isSubmitting}
-                      className="px-5 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm uppercase shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+                      className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm uppercase shadow-lg shadow-blue-950/50 border border-blue-400/30 flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       <span>Подтвердить</span>
@@ -486,7 +486,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                   </form>
 
                   {joinError && (
-                    <div className="mt-2 text-xs text-rose-400 flex items-center gap-1.5">
+                    <div className="mt-2 text-xs text-rose-300 flex items-center gap-1.5 p-2 rounded-lg bg-rose-950/40 border border-rose-900/50">
                       <AlertCircle className="w-4 h-4 shrink-0" />
                       <span>{joinError}</span>
                     </div>
@@ -501,10 +501,10 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
             <div>
               {isMyTurn ? (
                 /* Current player's turn to speak in Discord & lock in secret word */
-                <div className="glass-panel rounded-2xl p-5 sm:p-6 border border-indigo-500/40 bg-gradient-to-br from-indigo-950/30 via-slate-900/90 to-purple-950/30 animate-fade-in">
+                <div className="glass-panel rounded-2xl p-5 sm:p-6 border border-blue-500/30 bg-gradient-to-b from-blue-950/15 via-zinc-900/70 to-zinc-950/90 animate-fade-in">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center">
                         <Mic className="w-4 h-4 animate-pulse" />
                       </div>
                       <h4 className="font-bold text-base text-white">
@@ -514,7 +514,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                     <button
                       type="button"
                       onClick={onSkipTurn}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors"
+                      className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800 text-xs font-medium flex items-center gap-1.5 transition-colors"
                       title="Передать ход следующему игроку"
                     >
                       <SkipForward className="w-3.5 h-3.5" />
@@ -522,8 +522,8 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                     </button>
                   </div>
 
-                  <p className="text-xs text-slate-300 mb-4 leading-relaxed">
-                    1. <strong>Озвучьте намёк вслух в Discord / войсе</strong> для всех игроков.<br />
+                  <p className="text-xs text-zinc-300 mb-4 leading-relaxed">
+                    1. <strong>Озвучьте намёк голосом в Discord</strong> для всех участников.<br />
                     2. Введите сюда <strong>секретное слово-отгадку</strong> (начинается на <strong className="text-amber-300 font-mono">{revealedPrefix}...</strong>):
                   </p>
 
@@ -538,16 +538,16 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                             setAskError(null);
                           }}
                           placeholder={`Секретное слово (например: ${revealedPrefix}ОПАТА)...`}
-                          className="w-full px-4 py-3.5 rounded-xl bg-slate-950/90 text-amber-300 placeholder-slate-600 border border-slate-700/80 focus:outline-none focus:ring-2 focus:ring-amber-500 font-bold uppercase tracking-wider text-base font-mono"
+                          className="w-full px-4 py-3.5 rounded-xl bg-zinc-950 text-amber-300 placeholder-zinc-700 border border-zinc-800 focus:outline-none focus:border-amber-500/80 focus:ring-1 focus:ring-amber-500/40 font-bold uppercase tracking-wider text-base font-mono transition-colors"
                         />
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1.5">
-                        Слово скрыто от ведущего. Если контакт сработает — вы получите <strong>+10 очков</strong>!
+                      <p className="text-[11px] text-zinc-500 mt-1.5 font-mono">
+                        Слово скрыто от ведущего. За успешный контакт вы получите <strong>+10 очков</strong>.
                       </p>
                     </div>
 
                     {askError && (
-                      <div className="text-xs text-rose-400 flex items-center gap-1.5">
+                      <div className="text-xs text-rose-300 flex items-center gap-1.5 p-2 rounded-lg bg-rose-950/40 border border-rose-900/50">
                         <AlertCircle className="w-4 h-4 shrink-0" />
                         <span>{askError}</span>
                       </div>
@@ -557,7 +557,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                       <button
                         type="button"
                         onClick={onSkipTurn}
-                        className="px-4 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs font-medium transition-colors"
+                        className="px-4 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800 text-xs font-medium transition-colors"
                       >
                         Нет идей? Пропустить
                       </button>
@@ -565,7 +565,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                       <button
                         type="submit"
                         disabled={!intendedWord.trim() || isSubmitting}
-                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-950/40 border border-blue-400/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                       >
                         <Mic className="w-4 h-4" />
                         <span>Загадать слово 🎙️</span>
@@ -575,15 +575,15 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                 </div>
               ) : (
                 /* Another player's turn to speak */
-                <div className="glass-panel rounded-2xl p-5 sm:p-6 border border-slate-800 text-center">
-                  <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center mx-auto mb-3 animate-pulse">
+                <div className="glass-panel rounded-2xl p-5 sm:p-6 border border-white/[0.08] text-center">
+                  <div className="w-12 h-12 rounded-2xl bg-zinc-900 text-blue-400 border border-zinc-800 flex items-center justify-center mx-auto mb-3 animate-pulse">
                     <Mic className="w-6 h-6" />
                   </div>
                   <h4 className="text-base font-bold text-white mb-1">
-                    Сейчас очередь игрока: <span className="text-indigo-400 font-extrabold">{activePlayerName}</span>
+                    Очередь игрока: <span className="text-blue-400 font-extrabold">{activePlayerName}</span>
                   </h4>
-                  <p className="text-xs text-slate-400 max-w-md mx-auto mb-3">
-                    Слушайте намёк в Discord / голосовом чате! Как только он загадает слово, вы сможете крикнуть «Контакт!»
+                  <p className="text-xs text-zinc-400 max-w-md mx-auto mb-1 leading-relaxed">
+                    Слушайте намёк в Discord / голосовом чате. Как только он загадает слово, появится кнопка «КОНТАКТ!».
                   </p>
                 </div>
               )}
@@ -596,11 +596,11 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
               onClick={onOpenDirectGuess}
               className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors ${
                 remainingCooldownSec > 0
-                  ? 'bg-amber-950/40 hover:bg-amber-900/40 text-amber-300 border border-amber-500/30'
-                  : 'bg-slate-900/80 hover:bg-slate-800 text-indigo-300 hover:text-white border border-indigo-500/20 hover:border-indigo-500/40'
+                  ? 'bg-amber-950/30 hover:bg-amber-900/40 text-amber-300 border border-amber-500/30'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 hover:border-zinc-700'
               }`}
             >
-              <KeyRound className={`w-3.5 h-3.5 ${remainingCooldownSec > 0 ? 'text-amber-400' : 'text-indigo-400'}`} />
+              <KeyRound className={`w-3.5 h-3.5 ${remainingCooldownSec > 0 ? 'text-amber-400' : 'text-blue-400'}`} />
               <span>
                 {remainingCooldownSec > 0
                   ? `Я знаю слово целиком! (Ждать ${remainingCooldownSec}с)`

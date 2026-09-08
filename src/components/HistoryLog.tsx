@@ -24,7 +24,7 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
   const getIcon = (type: HistoryItem['type']) => {
     switch (type) {
       case 'question':
-        return <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />;
+        return <HelpCircle className="w-3.5 h-3.5 text-blue-400" />;
       case 'contact':
         return <Zap className="w-3.5 h-3.5 text-amber-400" />;
       case 'deflect':
@@ -36,7 +36,7 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
       case 'guess':
         return <KeyRound className="w-3.5 h-3.5 text-cyan-400" />;
       case 'win':
-        return <Trophy className="w-3.5 h-3.5 text-yellow-400" />;
+        return <Trophy className="w-3.5 h-3.5 text-amber-400" />;
       default:
         return <Info className="w-3.5 h-3.5 text-slate-400" />;
     }
@@ -48,18 +48,18 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
   };
 
   return (
-    <div className="w-full glass-panel rounded-2xl border border-slate-800 overflow-hidden flex flex-col">
+    <div className="w-full glass-panel rounded-2xl border border-slate-800/80 overflow-hidden flex flex-col bg-[#0d111c]/90">
       {/* Header */}
       <div
         onClick={() => setIsOpenMobile(!isOpenMobile)}
-        className="px-4 py-3 border-b border-slate-800/80 flex items-center justify-between cursor-pointer sm:cursor-default select-none bg-slate-900/40"
+        className="px-4 py-3 border-b border-slate-800/80 flex items-center justify-between cursor-pointer sm:cursor-default select-none bg-[#090b10]/80"
       >
         <div className="flex items-center gap-2">
-          <History className="w-4 h-4 text-indigo-400" />
-          <h4 className="font-bold text-xs uppercase tracking-wider text-slate-200">
+          <History className="w-3.5 h-3.5 text-blue-400" />
+          <h4 className="font-bold text-xs uppercase tracking-wider text-slate-300">
             История событий
           </h4>
-          <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px] font-mono">
+          <span className="px-2 py-0.5 rounded-full bg-[#0d111c] border border-slate-800 text-slate-400 text-[10px] font-mono">
             {history?.length || 0}
           </span>
         </div>
@@ -83,11 +83,11 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({ history }) => {
           history.map((item) => (
             <div
               key={item.id}
-              className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-start gap-2.5 text-xs transition-colors hover:border-slate-700"
+              className="p-2.5 rounded-xl bg-[#090b10]/90 border border-slate-800/80 flex items-start gap-2.5 text-xs transition-colors hover:border-slate-700"
             >
               <div className="mt-0.5 shrink-0">{getIcon(item.type)}</div>
               <div className="flex-1 leading-snug">
-                <p className="text-slate-200 font-medium">{item.text}</p>
+                <p className="text-slate-300 font-medium">{item.text}</p>
               </div>
               <div className="text-[10px] text-slate-500 font-mono shrink-0 whitespace-nowrap mt-0.5">
                 {formatTime(item.timestamp)}

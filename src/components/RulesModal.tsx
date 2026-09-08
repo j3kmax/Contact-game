@@ -10,29 +10,29 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-xl glass-panel-glow rounded-3xl p-6 sm:p-8 shadow-2xl border border-indigo-500/30 relative max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+      <div className="w-full max-w-xl glass-panel-glow rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-800/90 bg-[#0d111c]/95 relative max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
-            <HelpCircle className="w-6 h-6" />
+          <div className="w-11 h-11 rounded-2xl bg-blue-600/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+            <HelpCircle className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-2xl font-black text-white">Правила игры «Контакт»</h3>
+            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">Правила игры «Контакт»</h3>
             <p className="text-xs text-slate-400">Для голосового чата (Discord) с системой баллов</p>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+        <div className="flex flex-col gap-3.5 text-xs sm:text-sm text-slate-300 leading-relaxed">
           {/* Rule 1 */}
-          <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 flex gap-3">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+          <div className="p-4 rounded-2xl bg-[#090b10]/90 border border-slate-800/80 flex gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
               <Shield className="w-4 h-4" />
             </div>
             <div>
@@ -44,8 +44,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Rule 2 */}
-          <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 flex gap-3">
-            <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0 mt-0.5">
+          <div className="p-4 rounded-2xl bg-[#090b10]/90 border border-slate-800/80 flex gap-3">
+            <div className="w-8 h-8 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
               <Mic className="w-4 h-4" />
             </div>
             <div>
@@ -57,8 +57,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Rule 3 */}
-          <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 flex gap-3">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+          <div className="p-4 rounded-2xl bg-[#090b10]/90 border border-slate-800/80 flex gap-3">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
               <Zap className="w-4 h-4" />
             </div>
             <div>
@@ -72,8 +72,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Rule 4 */}
-          <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 flex gap-3">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center shrink-0 mt-0.5">
+          <div className="p-4 rounded-2xl bg-[#090b10]/90 border border-slate-800/80 flex gap-3">
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
               <Lock className="w-4 h-4" />
             </div>
             <div>
@@ -89,8 +89,8 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Rule 5 */}
-          <div className="p-4 rounded-2xl bg-slate-900/70 border border-slate-800 flex gap-3">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+          <div className="p-4 rounded-2xl bg-[#090b10]/90 border border-slate-800/80 flex gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
               <Medal className="w-4 h-4" />
             </div>
             <div>
@@ -110,7 +110,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
         <div className="mt-6 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all"
+            className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/20 transition-all cursor-pointer"
           >
             Понятно, в игру!
           </button>

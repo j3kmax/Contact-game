@@ -58,21 +58,21 @@ export const DirectGuessModal: React.FC<DirectGuessModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md glass-panel-glow rounded-3xl p-6 shadow-2xl border border-indigo-500/30 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+      <div className="w-full max-w-md glass-panel-glow rounded-3xl p-6 shadow-2xl border border-slate-800/90 bg-[#0d111c]/95 relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
+          <div className="w-10 h-10 rounded-xl bg-blue-600/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
             <KeyRound className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-white">Прямая угадайка</h3>
+            <h3 className="font-bold text-lg text-white tracking-tight">Прямая угадайка</h3>
             <p className="text-xs text-slate-400">
               Вы можете попытаться назвать тайное слово ведущего целиком!
             </p>
@@ -80,10 +80,10 @@ export const DirectGuessModal: React.FC<DirectGuessModalProps> = ({
         </div>
 
         {isCooldownActive && (
-          <div className="mb-4 p-3 rounded-xl bg-amber-950/50 border border-amber-500/40 text-amber-300 text-xs flex items-center gap-2">
-            <Clock className="w-4 h-4 text-amber-400 shrink-0 animate-spin" />
+          <div className="mb-4 p-3 rounded-xl bg-amber-950/25 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
+            <Clock className="w-4 h-4 text-amber-400 shrink-0" />
             <span>
-              У вас 1 попытка в 30 секунд. Перезарядка: <strong>{remainingSec} сек.</strong>
+              У вас 1 попытка в 30 секунд. Перезарядка: <strong className="font-mono">{remainingSec} сек.</strong>
             </span>
           </div>
         )}
@@ -99,15 +99,15 @@ export const DirectGuessModal: React.FC<DirectGuessModalProps> = ({
               setFeedback(null);
             }}
             placeholder={isCooldownActive ? `Подождите ${remainingSec} сек...` : "Введите слово целиком..."}
-            className="w-full px-4 py-3 rounded-xl bg-slate-900 text-white placeholder-slate-500 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold tracking-wide uppercase disabled:opacity-50"
+            className="w-full px-4 py-3 rounded-xl bg-[#090b10] text-white placeholder-slate-600 border border-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 font-bold tracking-wide uppercase disabled:opacity-50 font-mono"
           />
 
           {feedback && (
             <div
               className={`text-xs p-2.5 rounded-lg flex items-center gap-2 ${
                 feedback.isError
-                  ? 'bg-rose-950/50 text-rose-300 border border-rose-800/40'
-                  : 'bg-emerald-950/50 text-emerald-300 border border-emerald-800/40'
+                  ? 'bg-rose-950/30 text-rose-300 border border-rose-800/40'
+                  : 'bg-emerald-950/30 text-emerald-300 border border-emerald-800/40'
               }`}
             >
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -119,14 +119,14 @@ export const DirectGuessModal: React.FC<DirectGuessModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold transition-colors"
+              className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-sm font-semibold transition-colors"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={!guessWord.trim() || isSubmitting || isCooldownActive}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white text-sm font-bold shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {isCooldownActive ? `Ждите (${remainingSec}с)` : 'Назвать слово'}
             </button>

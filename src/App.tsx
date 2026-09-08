@@ -84,10 +84,10 @@ export function App() {
   const isInGame = room && room.status !== 'LOBBY' && isUserJoined;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white relative">
-      {/* Background Decorative Gradient Orbs */}
-      <div className="fixed top-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-indigo-600/10 blur-[120px] pointer-events-none" />
-      <div className="fixed bottom-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-purple-600/10 blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-[#090b10] bg-subtle-grid text-zinc-100 flex flex-col selection:bg-blue-600 selection:text-white relative">
+      {/* Subtle Architectural Ambient Lighting */}
+      <div className="fixed top-[-15%] left-1/2 -translate-x-1/2 w-[65vw] h-[45vh] rounded-full bg-blue-600/[0.05] blur-[140px] pointer-events-none" />
+      <div className="fixed bottom-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-slate-700/[0.04] blur-[130px] pointer-events-none" />
 
       {/* Main Header */}
       <Header
@@ -102,33 +102,35 @@ export function App() {
         {!roomId ? (
           /* Landing Screen: No Room Selected */
           <div className="flex-1 flex flex-col items-center justify-center max-w-lg mx-auto py-12 text-center animate-fade-in">
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 p-0.5 shadow-2xl shadow-indigo-500/30 mb-6">
-              <div className="w-full h-full bg-slate-950 rounded-[22px] flex items-center justify-center">
-                <Gamepad2 className="w-10 h-10 text-indigo-400" />
-              </div>
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-b from-zinc-800 to-zinc-900 border border-white/10 shadow-2xl shadow-black/70 flex items-center justify-center text-blue-400 mb-6 ring-1 ring-white/5">
+              <Gamepad2 className="w-8 h-8 text-blue-400" />
             </div>
 
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/80 border border-zinc-800 text-[11px] font-semibold text-zinc-400 uppercase tracking-widest mb-3">
+              Интеллектуальная игра
+            </div>
+
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-100 to-zinc-400 mb-3">
               ЕСТЬ КОНТАКТ!
             </h1>
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed mb-8">
-              Легендарная словесная party-игра для друзей и весёлых компаний.
-              Загадывайте намёки, ловите ассоциации и открывайте тайное слово буква за буквой!
+            <p className="text-sm sm:text-base text-zinc-400 max-w-md mx-auto leading-relaxed mb-8">
+              Словесная игра на интуицию, ассоциации и психологический расчёт.
+              Разгадывайте намёки, координируйтесь с командой и открывайте буквы одну за другой.
             </p>
 
             {/* Quick Room Actions */}
             <div className="w-full flex flex-col gap-4">
               <button
                 onClick={() => navigateToRoom(generateRoomId())}
-                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold text-lg shadow-xl shadow-indigo-500/25 flex items-center justify-center gap-2.5 transform transition-all active:scale-98"
+                className="w-full py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-base shadow-xl shadow-blue-950/40 border border-blue-400/20 flex items-center justify-center gap-2.5 transform transition-all active:scale-[0.99]"
               >
                 <Plus className="w-5 h-5" />
                 <span>Создать новую комнату</span>
               </button>
 
               <div className="relative flex items-center justify-center my-2">
-                <div className="border-t border-slate-800 w-full" />
-                <span className="bg-slate-950 px-3 text-xs uppercase tracking-wider text-slate-500 font-semibold absolute">
+                <div className="border-t border-zinc-800/90 w-full" />
+                <span className="bg-[#090b10] px-3 text-[11px] uppercase tracking-wider text-zinc-500 font-semibold absolute">
                   или
                 </span>
               </div>
@@ -145,12 +147,12 @@ export function App() {
                   value={inputCode}
                   onChange={(e) => setInputCode(e.target.value.toUpperCase())}
                   placeholder="ВВЕДИТЕ КОД КОМНАТЫ..."
-                  className="flex-1 px-4 py-3.5 rounded-2xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 font-mono font-bold tracking-wider focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                  className="flex-1 px-4 py-3.5 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-white placeholder-zinc-600 font-mono font-bold tracking-wider focus:outline-none focus:border-blue-500/80 focus:ring-1 focus:ring-blue-500/40 text-sm transition-colors"
                 />
                 <button
                   type="submit"
                   disabled={!inputCode.trim()}
-                  className="px-5 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="px-5 py-3.5 rounded-2xl bg-zinc-800/90 hover:bg-zinc-750 text-zinc-200 border border-zinc-700/60 font-semibold text-sm flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 >
                   <span>Войти</span>
                   <ArrowRight className="w-4 h-4" />
@@ -159,9 +161,9 @@ export function App() {
 
               <button
                 onClick={() => setIsRulesOpen(true)}
-                className="mt-2 text-xs text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-4"
+                className="mt-2 text-xs text-zinc-400 hover:text-zinc-200 font-medium transition-colors"
               >
-                Как играть в «Контакт»? Правила игры
+                Правила и механика игры
               </button>
             </div>
           </div>

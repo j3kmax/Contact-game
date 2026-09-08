@@ -55,17 +55,17 @@ export const Timer: React.FC<TimerProps> = ({ timerExpiresAt, onExpired, isHost 
     <div
       className={`w-full rounded-2xl p-4 sm:p-5 border transition-all duration-300 ${
         isHost
-          ? 'bg-gradient-to-r from-red-950/80 via-rose-900/60 to-red-950/80 border-rose-600/50 shadow-lg shadow-rose-950/50 animate-pulse-fast'
-          : 'bg-gradient-to-r from-indigo-950/80 via-purple-900/40 to-indigo-950/80 border-indigo-500/40 shadow-lg shadow-indigo-950/50'
+          ? 'bg-[#140b0f]/90 border-rose-600/40 shadow-xl shadow-rose-950/30'
+          : 'bg-[#0d111c]/90 border-slate-800 shadow-xl shadow-black/40'
       }`}
     >
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3.5">
           <div
-            className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-2xl font-mono shadow-inner ${
+            className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-2xl font-mono border transition-all ${
               isUrgent
-                ? 'bg-rose-600 text-white animate-bounce-short'
-                : 'bg-indigo-600 text-white'
+                ? 'bg-rose-950/60 border-rose-500/60 text-rose-300 shadow-lg shadow-rose-950/50'
+                : 'bg-[#090b10] border-slate-800 text-blue-400 shadow-inner'
             }`}
           >
             {secondsLeft}
@@ -74,15 +74,15 @@ export const Timer: React.FC<TimerProps> = ({ timerExpiresAt, onExpired, isHost 
           <div>
             <div className="flex items-center gap-2">
               {isHost ? (
-                <AlertTriangle className="w-5 h-5 text-rose-400 animate-wiggle" />
+                <AlertTriangle className="w-4 h-4 text-rose-400" />
               ) : (
-                <Clock className="w-5 h-5 text-indigo-400" />
+                <Clock className="w-4 h-4 text-blue-400" />
               )}
-              <h3 className="font-bold text-base sm:text-lg text-white">
-                {isHost ? 'ВНИМАНИЕ: ОБЪЯВЛЕН КОНТАКТ!' : 'ИДЕТ ОТСЧЕТ 10 СЕКУНД!'}
+              <h3 className="font-bold text-sm sm:text-base text-white tracking-tight">
+                {isHost ? 'ВНИМАНИЕ: ОБЪЯВЛЕН КОНТАКТ!' : 'ИДЕТ ОТСЧЕТ 10 СЕКУНД'}
               </h3>
             </div>
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-slate-400 mt-0.5">
               {isHost
                 ? 'У вас есть секунды, чтобы ввести «Это не...» и сбить контакт!'
                 : 'Ждём: успеет ли ведущий отгадать ассоциацию?'}
@@ -90,11 +90,11 @@ export const Timer: React.FC<TimerProps> = ({ timerExpiresAt, onExpired, isHost 
           </div>
         </div>
 
-        {/* Circular / Progress Indicator */}
-        <div className="w-full sm:w-48 bg-slate-900/80 rounded-full h-3.5 p-0.5 border border-slate-700/60 overflow-hidden">
+        {/* Precision Progress Indicator */}
+        <div className="w-full sm:w-48 bg-[#090b10] rounded-full h-2.5 p-0.5 border border-slate-800/90 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-200 ${
-              isUrgent ? 'bg-rose-500' : 'bg-gradient-to-r from-indigo-500 to-purple-500'
+              isUrgent ? 'bg-rose-500' : 'bg-gradient-to-r from-blue-600 to-indigo-500'
             }`}
             style={{ width: `${percentage}%` }}
           />
