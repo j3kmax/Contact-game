@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Flame, X, Check, Trash2, Info, ExternalLink } from 'lucide-react';
+import { Flame, X, Check, Trash2, Info, ExternalLink, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { FirebaseConfig } from '../types/game';
 import {
   getSavedFirebaseConfig,
@@ -19,7 +19,13 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
   const [databaseURL, setDatabaseURL] = useState('');
   const [projectId, setProjectId] = useState('');
   const [authDomain, setAuthDomain] = useState('');
+  const [showApiKey, setShowApiKey] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isEnvConfigured = Boolean(
+    import.meta.env.VITE_FIREBASE_API_KEY &&
+    import.meta.env.VITE_FIREBASE_DATABASE_URL
+  );
 
   useEffect(() => {
     const existing = getSavedFirebaseConfig();
@@ -39,12 +45,10 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
   const handleParseJson = () => {
     try {
       setError(null);
-      // Clean up common JS object syntax if pasted without quotes
       let clean = jsonInput.trim();
       if (clean.startsWith('const firebaseConfig =')) {
         clean = clean.replace('const firebaseConfig =', '').replace(/;$/, '').trim();
       }
-      // If keys don't have quotes, add quotes
       const formatted = clean.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
       const parsed = JSON.parse(formatted);
 
@@ -60,6 +64,11 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isEnvConfigured) {
+      onClose();
+      return;
+    }
+
     if (!databaseURL.trim()) {
       setError('Поле Database URL обязательно для Realtime Database');
       return;
@@ -111,36 +120,48 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
           </div>
         </div>
 
-        <div className="p-3 rounded-2xl bg-[#072519]/90 border border-white/[0.08] text-xs text-zinc-300 mb-4 flex items-start gap-2.5 leading-relaxed shadow-inner">
-          <Info className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-          <div>
-            В демо-режиме игра синхронизируется между вкладками браузера локально.
-            Чтобы играть с друзьями через интернет, укажите данные вашего бесплатного проекта <strong>Firebase Realtime Database</strong>.
+        {isEnvConfigured ? (
+          <div className="p-3.5 rounded-2xl bg-emerald-950/50 border border-emerald-500/30 text-xs text-emerald-200 mb-4 flex items-start gap-2.5 shadow-inner">
+            <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+            <div className="leading-relaxed">
+              <span className="font-bold text-emerald-300 block mb-0.5">Безопасная серверная конфигурация</span>
+              База данных подключена через системные переменные окружения сервера (Vercel). Конфигурация защищена и не может быть изменена или сброшена через клиентский браузер.
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="p-3 rounded-2xl bg-[#072519]/90 border border-white/[0.08] text-xs text-zinc-300 mb-4 flex items-start gap-2.5 leading-relaxed shadow-inner">
+            <Info className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              В демо-режиме игра синхронизируется между вкладками браузера локально.
+              Чтобы играть с друзьями через интернет, укажите данные вашего бесплатного проекта <strong>Firebase Realtime Database</strong>.
+            </div>
+          </div>
+        )}
 
-        {/* Quick Paste JSON */}
-        <div className="mb-4">
-          <label className="block text-xs font-semibold text-zinc-300 mb-1">
-            Быстрая вставка объекта <code>firebaseConfig</code> из консоли:
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={jsonInput}
-              onChange={(e) => setJsonInput(e.target.value)}
-              placeholder='{ "apiKey": "...", "databaseURL": "..." }'
-              className="flex-1 px-3 py-2 text-xs rounded-xl bg-[#04160e] text-zinc-200 border border-white/[0.1] font-mono focus:outline-none focus:border-emerald-400"
-            />
-            <button
-              type="button"
-              onClick={handleParseJson}
-              className="px-3 py-2 bg-[#072418] hover:bg-[#0a3322] border border-white/[0.1] text-zinc-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
-            >
-              Заполнить
-            </button>
+        {/* Quick Paste JSON (only when not managed by env) */}
+        {!isEnvConfigured && (
+          <div className="mb-4">
+            <label className="block text-xs font-semibold text-zinc-300 mb-1">
+              Быстрая вставка объекта <code>firebaseConfig</code> из консоли:
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={jsonInput}
+                onChange={(e) => setJsonInput(e.target.value)}
+                placeholder='{ "apiKey": "...", "databaseURL": "..." }'
+                className="flex-1 px-3 py-2 text-xs rounded-xl bg-[#04160e] text-zinc-200 border border-white/[0.1] font-mono focus:outline-none focus:border-emerald-400"
+              />
+              <button
+                type="button"
+                onClick={handleParseJson}
+                className="px-3 py-2 bg-[#072418] hover:bg-[#0a3322] border border-white/[0.1] text-zinc-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Заполнить
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         <form onSubmit={handleSave} className="flex flex-col gap-3">
           <div>
@@ -150,10 +171,11 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
             <input
               type="text"
               required
+              disabled={isEnvConfigured}
               value={databaseURL}
               onChange={(e) => setDatabaseURL(e.target.value)}
               placeholder="https://your-app-default-rtdb.firebaseio.com"
-              className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#04160e] text-white border border-white/[0.1] font-mono focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:outline-none"
+              className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#04160e] text-white border border-white/[0.1] font-mono focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -162,13 +184,24 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
               <label className="block text-xs font-semibold text-zinc-300 mb-1">
                 API Key
               </label>
-              <input
-                type="text"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="AIzaSy..."
-                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#04160e] text-white border border-white/[0.1] font-mono focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:outline-none"
-              />
+              <div className="relative">
+                <input
+                  type={showApiKey ? 'text' : 'password'}
+                  disabled={isEnvConfigured}
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="AIzaSy..."
+                  className="w-full pr-8 px-3.5 py-2.5 text-xs rounded-xl bg-[#04160e] text-white border border-white/[0.1] font-mono focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+                  title={showApiKey ? 'Скрыть ключ' : 'Показать ключ'}
+                >
+                  {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-300 mb-1">
@@ -176,10 +209,11 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
               </label>
               <input
                 type="text"
+                disabled={isEnvConfigured}
                 value={projectId}
                 onChange={(e) => setProjectId(e.target.value)}
                 placeholder="my-contact-game"
-                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#04160e] text-white border border-white/[0.1] font-mono focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:outline-none"
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-[#04160e] text-white border border-white/[0.1] font-mono focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -187,7 +221,7 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
           {error && <p className="text-xs text-rose-400">{error}</p>}
 
           <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-white/[0.08]">
-            {isConfigured && (
+            {!isEnvConfigured && isConfigured && (
               <button
                 type="button"
                 onClick={handleClear}
@@ -199,20 +233,32 @@ export const FirebaseConfigModal: React.FC<FirebaseConfigModalProps> = ({ isOpen
             )}
 
             <div className="flex items-center gap-2 ml-auto">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-xs font-semibold rounded-xl bg-[#072519] hover:bg-[#0a3322] border border-white/[0.1] text-zinc-300 transition-colors cursor-pointer"
-              >
-                Отмена
-              </button>
-              <button
-                type="submit"
-                className="px-5 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-emerald-400 via-teal-400 to-lime-400 hover:from-emerald-300 hover:to-lime-300 text-slate-950 flex items-center gap-1.5 shadow-lg shadow-emerald-950/40 border border-emerald-300/40 transition-all cursor-pointer active:scale-95"
-              >
-                <Check className="w-4 h-4" />
-                <span>Сохранить</span>
-              </button>
+              {isEnvConfigured ? (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-emerald-400 via-teal-400 to-lime-400 hover:from-emerald-300 hover:to-lime-300 text-slate-950 transition-all cursor-pointer shadow-lg shadow-emerald-950/40 active:scale-95"
+                >
+                  Понятно / Закрыть
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 text-xs font-semibold rounded-xl bg-[#072519] hover:bg-[#0a3322] border border-white/[0.1] text-zinc-300 transition-colors cursor-pointer"
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 text-xs font-black rounded-xl bg-gradient-to-r from-emerald-400 via-teal-400 to-lime-400 hover:from-emerald-300 hover:to-lime-300 text-slate-950 flex items-center gap-1.5 shadow-lg shadow-emerald-950/40 border border-emerald-300/40 transition-all cursor-pointer active:scale-95"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Сохранить</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </form>

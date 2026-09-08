@@ -38,14 +38,19 @@ export function App() {
   const [isRulesOpen, setIsRulesOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Sync roomId change with URL hash
+  // Sync roomId and admin settings change with URL hash
   useEffect(() => {
     const handleHashChange = () => {
-      const match = window.location.hash.match(/room=([A-Za-z0-9_-]+)/);
+      const hash = window.location.hash;
+      const match = hash.match(/room=([A-Za-z0-9_-]+)/);
       if (match && match[1]) {
         setRoomId(match[1].toUpperCase());
       }
+      if (hash.includes('#admin-config') || hash.includes('#dev-settings')) {
+        setIsSettingsOpen(true);
+      }
     };
+    handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
@@ -95,7 +100,6 @@ export function App() {
       <Header
         room={room}
         currentUser={currentUser}
-        onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenRules={() => setIsRulesOpen(true)}
       />
 
@@ -213,7 +217,7 @@ export function App() {
 
       {/* Footer */}
       <footer className="py-4 border-t border-emerald-950/60 text-center text-xs text-emerald-600/80">
-        <p>«Контакт» — сетевая игра в реальном времени • Serverless Architecture (Firebase / Broadcast)</p>
+        <p>© «Контакт» — интеллектуальная онлайн-игра в реальном времени</p>
       </footer>
 
       {/* Global Modals */}

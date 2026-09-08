@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { Volume2, VolumeX, Copy, Check, Settings, HelpCircle, Users, Flame, Gamepad2 } from 'lucide-react';
+import { Volume2, VolumeX, Copy, Check, HelpCircle, Users, Gamepad2 } from 'lucide-react';
 import { Player, Room } from '../types/game';
 import { sounds } from '../services/sound';
-import { isFirebaseConfigured } from '../config/firebase';
 
 interface HeaderProps {
   room: Room | null;
   currentUser: Player | null;
-  onOpenSettings: () => void;
+  onOpenSettings?: () => void;
   onOpenRules: () => void;
 }
 
@@ -36,7 +35,6 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const playerCount = room?.players ? Object.keys(room.players).length : 0;
-  const isFirebaseActive = isFirebaseConfigured();
 
   return (
     <header className="sticky top-2 z-30 w-full px-3 sm:px-6">
@@ -128,27 +126,6 @@ export const Header: React.FC<HeaderProps> = ({
             title="Правила игры"
           >
             <HelpCircle className="w-4 h-4 text-emerald-300" />
-          </button>
-
-          {/* Firebase Settings */}
-          <button
-            onClick={onOpenSettings}
-            className={`p-2 rounded-xl transition-all border cursor-pointer ${
-              isFirebaseActive
-                ? 'bg-emerald-950/40 text-emerald-300 border-emerald-400/50 hover:bg-emerald-900/50 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
-                : 'bg-[#061e14]/85 text-emerald-400/60 border-emerald-500/20 hover:bg-[#0b3322] hover:text-white'
-            }`}
-            title={
-              isFirebaseActive
-                ? 'Firebase Realtime DB подключена'
-                : 'Демо-режим (Нажмите для настройки Firebase)'
-            }
-          >
-            {isFirebaseActive ? (
-              <Flame className="w-4 h-4 text-emerald-400 drop-shadow-[0_0_6px_#34d399]" />
-            ) : (
-              <Settings className="w-4 h-4" />
-            )}
           </button>
         </div>
       </div>
