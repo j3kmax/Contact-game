@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Player, Room } from '../types/game';
+import { CONTACT_WORDS, getRandomWords, isWordInDictionary } from '../data/words';
 
 function normalizeWord(str: string): string {
   return str
@@ -533,6 +534,42 @@ describe('Contact Game Logic & Normalization', () => {
       expect(currentTime >= room.turnExpiresAt!).toBe(true);
       const turn3 = getNextTurn(room);
       expect(turn3.activePlayerId).toBe('p1');
+    });
+  });
+
+  describe('Curated Contact Words Dictionary & Suggestions', () => {
+    it('contains a massive database of curated nouns (at least 400+ words)', () => {
+      expect(CONTACT_WORDS.length).toBeGreaterThanOrEqual(400);
+    });
+
+    it('contains only valid Russian uppercase words without duplicates or spaces', () => {
+      const set = new Set<string>();
+      for (const word of CONTACT_WORDS) {
+        expect(word).toBe(word.toUpperCase().trim());
+        expect(word.length).toBeGreaterThanOrEqual(3);
+        expect(/^[А-ЯЁ]+$/.test(word)).toBe(true);
+        expect(set.has(word)).toBe(false); // No duplicates
+        set.add(word);
+      }
+    });
+
+    it('generates 5 unique random words on request', () => {
+      const fiveWords = getRandomWords(5);
+      expect(fiveWords.length).toBe(5);
+      const unique = new Set(fiveWords);
+      expect(unique.size).toBe(5);
+      fiveWords.forEach((w) => {
+        expect(isWordInDictionary(w)).toBe(true);
+      });
+    });
+
+    it('excludes specified words when requesting new suggestions', () => {
+      const firstSet = getRandomWords(5);
+      const secondSet = getRandomWords(5, firstSet);
+      expect(secondSet.length).toBe(5);
+      firstSet.forEach((w) => {
+        expect(secondSet.includes(w)).toBe(false);
+      });
     });
   });
 });

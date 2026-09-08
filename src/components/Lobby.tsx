@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Crown, Gamepad2, Play, Users, Copy, Check, Sparkles, AlertCircle, UserMinus, Target } from 'lucide-react';
+import { Crown, Gamepad2, Play, Users, Copy, Check, Sparkles, AlertCircle, UserMinus, Target, RefreshCw, Dices, CheckCircle2 } from 'lucide-react';
 import { Room, Player, PlayerRole } from '../types/game';
 import { sounds } from '../services/sound';
+import { getRandomWords } from '../data/words';
 
 interface LobbyProps {
   room: Room | null;
@@ -27,9 +28,22 @@ export function Lobby({
   const [name, setName] = useState(currentUser?.name || '');
   const [selectedRole, setSelectedRole] = useState<PlayerRole>(currentUser?.role || 'player');
   const [secretWord, setSecretWord] = useState('');
+  const [wordSuggestions, setWordSuggestions] = useState<string[]>(() => getRandomWords(5));
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleRefreshSuggestions = () => {
+    const nextWords = getRandomWords(5, wordSuggestions);
+    setWordSuggestions(nextWords);
+    sounds.playPop();
+  };
+
+  const handleSelectWord = (word: string) => {
+    setSecretWord(word);
+    setError(null);
+    sounds.playPop();
+  };
 
   const playersList = room?.players ? Object.values(room.players) : [];
   const effectiveLeaderId = room?.leaderId || room?.hostId;
@@ -170,23 +184,85 @@ export function Lobby({
           </form>
         </div>
       ) : isLeader ? (
-        /* Step 2A: Round Leader start form (Enter Secret Word) */
+        /* Step 2A: Round Leader start form (Enter or Select Secret Word) */
         <div className="glass-panel-elevated rounded-3xl p-6 sm:p-8 border border-amber-500/30 shadow-xl specular-border relative overflow-hidden">
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <Target className="w-4 h-4" />
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-md">
+                <Target className="w-4 h-4" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Вы ведущий: загадайте тайное слово</h3>
             </div>
-            <h3 className="text-lg font-bold text-white">Вы ведущий: загадайте тайное слово</h3>
+            <button
+              type="button"
+              onClick={handleRefreshSuggestions}
+              className="px-3 py-1.5 rounded-xl bg-[#07090e] hover:bg-zinc-800 text-amber-300 hover:text-amber-200 border border-amber-500/30 text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer active:scale-95"
+              title="Получить 5 других случайных слов"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-amber-400" />
+              <span>Другие варианты</span>
+            </button>
           </div>
-          <p className="text-xs text-zinc-400 mb-5 leading-relaxed">
-            Существительное в именительном падеже (например: <strong>АВТОМОБИЛЬ</strong>, <strong>ФОТОГРАФИЯ</strong>). Игрокам откроется только первая буква!
+
+          <p className="text-xs text-zinc-400 mb-4 leading-relaxed">
+            Выберите одно из 5 предложенных проверенных существительных (без ошибок и опечаток) или введите своё:
           </p>
+
+          {/* 5 Suggested Words Grid */}
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono flex items-center gap-1.5">
+                <Dices className="w-3.5 h-3.5 text-amber-400" />
+                Случайные варианты на выбор:
+              </span>
+              <span className="text-[10px] text-zinc-500 font-mono">Нажмите для выбора</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {wordSuggestions.map((w) => {
+                const isSelected = secretWord === w;
+                return (
+                  <button
+                    key={w}
+                    type="button"
+                    onClick={() => handleSelectWord(w)}
+                    className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer shadow-sm active:scale-[0.98] ${
+                      isSelected
+                        ? 'bg-amber-500/20 border-amber-400 text-amber-200 ring-2 ring-amber-400/40 shadow-[0_0_20px_-4px_rgba(245,158,11,0.4)]'
+                        : 'bg-[#07090e]/90 hover:bg-zinc-900 border-white/[0.09] hover:border-amber-500/40 text-white'
+                    }`}
+                  >
+                    <div>
+                      <div className="font-mono font-black text-sm sm:text-base tracking-wider">
+                        {w}
+                      </div>
+                      <div className="text-[10px] text-zinc-500 font-mono mt-0.5">
+                        {w.length} букв
+                      </div>
+                    </div>
+                    {isSelected ? (
+                      <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
+                    ) : (
+                      <span className="w-4 h-4 rounded-full border border-white/20 shrink-0" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <form onSubmit={handleStart} className="flex flex-col gap-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5 font-mono">
-                Секретное слово
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 font-mono">
+                  Выбранное секретное слово
+                </label>
+                {secretWord && (
+                  <span className="text-[11px] text-amber-300 font-mono">
+                    Первая буква: «<strong>{secretWord[0]}</strong>»
+                  </span>
+                )}
+              </div>
               <input
                 type="text"
                 required
@@ -195,11 +271,11 @@ export function Lobby({
                   setSecretWord(e.target.value.toUpperCase());
                   setError(null);
                 }}
-                placeholder="ВВЕДИТЕ СЛОВО..."
-                className="w-full px-4 py-4 rounded-2xl bg-[#07090e] text-amber-300 placeholder-zinc-700 border border-white/[0.09] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-2xl font-black tracking-widest uppercase font-mono text-center transition-colors shadow-inner"
+                placeholder="ВЫБЕРИТЕ ИЛИ ВВЕДИТЕ СЛОВО..."
+                className="w-full px-4 py-3.5 rounded-2xl bg-[#07090e] text-amber-300 placeholder-zinc-700 border border-white/[0.09] focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-xl sm:text-2xl font-black tracking-widest uppercase font-mono text-center transition-colors shadow-inner"
               />
               <p className="text-[11px] text-zinc-500 mt-1.5 text-center font-mono">
-                Не менее 3 символов • Только буквы
+                Игрокам откроется только первая буква • От 3 букв
               </p>
             </div>
 
@@ -216,7 +292,7 @@ export function Lobby({
               className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base shadow-xl shadow-amber-500/20 border border-amber-400/40 flex items-center justify-center gap-2 transition-all disabled:opacity-40 cursor-pointer active:scale-[0.99]"
             >
               <Play className="w-5 h-5 fill-current" />
-              <span>Начать игру</span>
+              <span>Начать игру с этим словом</span>
             </button>
           </form>
         </div>
