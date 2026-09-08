@@ -9,6 +9,7 @@ interface ActionPanelProps {
   onAskQuestion: (intendedWord: string) => Promise<void>;
   onCancelQuestion: () => Promise<void>;
   onSkipTurn: () => Promise<void>;
+  onPassTurnTo?: (targetPlayerId: string) => Promise<void>;
   onDeclareContact: (partnerWord: string) => Promise<void>;
   onJoinContact: (word: string) => Promise<void>;
   onHostGiveUp: () => Promise<void>;
@@ -24,6 +25,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   onAskQuestion,
   onCancelQuestion,
   onSkipTurn,
+  onPassTurnTo,
   onDeclareContact,
   onJoinContact,
   onHostGiveUp,
@@ -57,6 +59,9 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   const isQuestionAuthor = room.currentQuestion?.authorId === currentUser.id;
   const isContactDeclared = room.status === 'CONTACT_DECLARED';
   const revealedPrefix = room.secretWord.slice(0, room.revealedLettersCount);
+  const otherEligiblePlayers = Object.values(room.players || {}).filter(
+    (p) => p.id !== effectiveLeaderId && p.id !== currentUser.id
+  );
 
   // Direct guess cooldown calculation
   const [remainingCooldownSec, setRemainingCooldownSec] = useState(0);
@@ -521,15 +526,42 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                         Ваша черга загадувати намёк!
                       </h4>
                     </div>
-                    <button
-                      type="button"
-                      onClick={onSkipTurn}
-                      className="px-3.5 py-1.5 rounded-xl bg-[#07090e]/80 hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-white/[0.08] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                      title="Передати хід наступному гравцю"
-                    >
-                      <SkipForward className="w-3.5 h-3.5" />
-                      <span>Пропустити хід</span>
-                    </button>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {onPassTurnTo && otherEligiblePlayers.length > 0 && (
+                        <div className="relative">
+                          <select
+                            defaultValue=""
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                onPassTurnTo(e.target.value);
+                                e.target.value = '';
+                              }
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-[#07090e] text-blue-300 border border-blue-500/30 text-xs font-semibold cursor-pointer focus:outline-none hover:border-blue-400 transition-colors shadow-inner"
+                            title="Передати чергу ходу обраному гравцю"
+                          >
+                            <option value="" disabled>
+                              👉 Передати хід...
+                            </option>
+                            {otherEligiblePlayers.map((p) => (
+                              <option key={p.id} value={p.id} className="bg-[#0b0e18] text-white">
+                                {p.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={onSkipTurn}
+                        className="px-3.5 py-1.5 rounded-xl bg-[#07090e]/80 hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-white/[0.08] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        title="Передати хід наступному гравцю по колу"
+                      >
+                        <SkipForward className="w-3.5 h-3.5" />
+                        <span>Пропустити хід</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="text-xs text-zinc-300 mb-4 leading-relaxed bg-[#07090e]/60 p-3.5 rounded-2xl border border-white/[0.06]">

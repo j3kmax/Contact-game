@@ -70,6 +70,7 @@ export function App() {
     askQuestion,
     cancelQuestion,
     skipTurn,
+    passTurnTo,
     declareContact,
     joinContact,
     hostGiveUp,
@@ -191,6 +192,7 @@ export function App() {
             onRestartGame={restartGame}
             onKickPlayer={kickPlayer}
             onTransferLobbyHost={transferLobbyHost}
+            onPassTurnTo={passTurnTo}
           />
         ) : (
           /* Lobby View (Waiting for start / Joining) */

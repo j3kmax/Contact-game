@@ -578,6 +578,54 @@ export function useGameRoom(roomId: string | null) {
     sounds.playPop();
   }, [room, roomId, currentUser, addLog]);
 
+  // 4c. Pass turn to a specific player
+  const passTurnTo = useCallback(
+    async (targetPlayerId: string) => {
+      if (!room || !roomId || !currentUser) return;
+      if (room.status !== 'QUESTION_PHASE' || room.currentQuestion) {
+        throw new Error('Не можна передавати хід під час активного питання чи контакту');
+      }
+
+      const effectiveLeaderId = room.leaderId || room.hostId;
+      if (targetPlayerId === effectiveLeaderId) {
+        throw new Error('Не можна передати хід ведучому раунду');
+      }
+
+      const targetPlayer = room.players?.[targetPlayerId];
+      if (!targetPlayer) {
+        throw new Error('Гравця не знайдено в кімнаті');
+      }
+
+      const currentPlayers = Object.values(room.players || {}).filter((p) => p.id !== effectiveLeaderId);
+      const playerIds = currentPlayers.map((p) => p.id);
+      const existingOrder = (room.turnOrder || []).filter((id) => playerIds.includes(id));
+      for (const id of playerIds) {
+        if (!existingOrder.includes(id)) {
+          existingOrder.push(id);
+        }
+      }
+
+      if (!existingOrder.includes(targetPlayerId)) {
+        existingOrder.push(targetPlayerId);
+      }
+
+      const updates: Partial<Room> = {
+        activePlayerId: targetPlayerId,
+        turnOrder: existingOrder,
+        historyLog: addLog(
+          room.historyLog,
+          `👉 ${currentUser.name} передав чергу ходу гравцю ${targetPlayer.name}.`,
+          'info',
+          currentUser.name
+        ),
+      };
+
+      await gameStorage.updateRoom(roomId, updates);
+      sounds.playPop();
+    },
+    [room, roomId, currentUser, addLog]
+  );
+
   // Auto-recover from stuck VERIFY_MATCH state
   useEffect(() => {
     if (room && room.status === 'VERIFY_MATCH') {
@@ -1057,6 +1105,7 @@ export function useGameRoom(roomId: string | null) {
     askQuestion,
     cancelQuestion,
     skipTurn,
+    passTurnTo,
     declareContact,
     joinContact,
     hostGiveUp,

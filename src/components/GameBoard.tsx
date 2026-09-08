@@ -5,7 +5,7 @@ import { ActionPanel } from './ActionPanel';
 import { HistoryLog } from './HistoryLog';
 import { DirectGuessModal } from './DirectGuessModal';
 import { GameOverModal } from './GameOverModal';
-import { Crown, Gamepad2, Users, Target, UserMinus } from 'lucide-react';
+import { Crown, Gamepad2, Users, Target, UserMinus, ArrowRightCircle } from 'lucide-react';
 
 interface GameBoardProps {
   room: Room;
@@ -13,6 +13,7 @@ interface GameBoardProps {
   onAskQuestion: (intendedWord: string) => Promise<void>;
   onCancelQuestion: () => Promise<void>;
   onSkipTurn: () => Promise<void>;
+  onPassTurnTo?: (targetPlayerId: string) => Promise<void>;
   onDeclareContact: (partnerWord: string) => Promise<void>;
   onJoinContact: (word: string) => Promise<void>;
   onHostGiveUp: () => Promise<void>;
@@ -31,6 +32,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   onAskQuestion,
   onCancelQuestion,
   onSkipTurn,
+  onPassTurnTo,
   onDeclareContact,
   onJoinContact,
   onHostGiveUp,
@@ -69,6 +71,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
             onAskQuestion={onAskQuestion}
             onCancelQuestion={onCancelQuestion}
             onSkipTurn={onSkipTurn}
+            onPassTurnTo={onPassTurnTo}
             onDeclareContact={onDeclareContact}
             onJoinContact={onJoinContact}
             onHostGiveUp={onHostGiveUp}
@@ -152,7 +155,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {/* Pass turn to this player */}
+                      {onPassTurnTo && !isPlayerLeader && !isTurnPlayer && !room.currentQuestion && (
+                        <button
+                          type="button"
+                          onClick={() => onPassTurnTo(p.id)}
+                          className="px-2 py-0.5 rounded-lg bg-blue-950/60 hover:bg-blue-900/80 text-blue-300 hover:text-white border border-blue-500/30 text-[10px] font-mono font-bold flex items-center gap-1 transition-all cursor-pointer shadow-sm hover:border-blue-400 active:scale-95"
+                          title={`Передати чергу ходу гравцю ${p.name}`}
+                        >
+                          <ArrowRightCircle className="w-3 h-3 text-blue-400" />
+                          <span>Дати хід</span>
+                        </button>
+                      )}
+
                       {/* Score Badge */}
                       <span className="px-2 py-0.5 rounded-lg bg-[#07090e] text-[11px] font-mono font-bold text-amber-300 border border-amber-500/30 shadow-inner" title="Баллы">
                         {p.score || 0}
