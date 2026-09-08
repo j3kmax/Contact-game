@@ -277,6 +277,41 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
         </div>
       )}
 
+      {/* Used / Eliminated words indicator */}
+      {((room.hostWords && room.hostWords.length > 0) || (room.askedWords && room.askedWords.length > 0)) && (
+        <div className="glass-panel-elevated rounded-2xl p-3.5 border border-white/[0.07] specular-border flex flex-col gap-2">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 font-mono flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              Использованные слова раунда
+            </span>
+            <span className="text-[10px] text-zinc-500 font-mono">Нельзя загадывать или использовать как отгадки</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5 items-center">
+            {room.hostWords?.map((w) => (
+              <span
+                key={`host-${w}`}
+                className="px-2.5 py-1 rounded-xl bg-rose-950/40 text-rose-300 border border-rose-800/40 text-xs font-mono font-bold flex items-center gap-1 shadow-sm"
+                title="Называл ведущий (нельзя загадывать и использовать как отгадку)"
+              >
+                <span className="text-[10px] text-rose-400/80">Ведущий:</span>
+                <span className="line-through">{w.toUpperCase()}</span>
+              </span>
+            ))}
+            {room.askedWords?.map((w) => (
+              <span
+                key={`asked-${w}`}
+                className="px-2.5 py-1 rounded-xl bg-zinc-900/90 text-zinc-300 border border-white/[0.08] text-xs font-mono font-medium flex items-center gap-1 shadow-sm"
+                title="Уже загадывалось (нельзя повторно загадывать или использовать как отгадку)"
+              >
+                <span className="text-[10px] text-zinc-500">Загадано:</span>
+                <span className="line-through">{w.toUpperCase()}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 3. Role-Based Controls */}
       {isHost ? (
         /* HOST VIEW */

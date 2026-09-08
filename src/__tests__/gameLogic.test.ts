@@ -315,4 +315,80 @@ describe('Contact Game Logic & Normalization', () => {
     expect('p1' === newEffectiveLeaderId).toBe(false);
     expect('p2' === newEffectiveLeaderId).toBe(true);
   });
+
+  describe('Used Words, Host Words & Already Asked Words Restrictions', () => {
+    it('blocks asking words that were written by the host', () => {
+      const room: Partial<Room> = {
+        secretWord: 'ПАРОХОД',
+        revealedLettersCount: 2,
+        hostWords: ['парк', 'парус'],
+        askedWords: [],
+      };
+
+      const candidate1 = 'ПАРК';
+      const isBlocked1 = (room.hostWords || []).map(normalizeWord).includes(normalizeWord(candidate1));
+      expect(isBlocked1).toBe(true);
+
+      const candidate2 = 'Пароход'; // Secret word
+      const isBlockedSecret = normalizeWord(candidate2) === normalizeWord(room.secretWord!);
+      expect(isBlockedSecret).toBe(true);
+
+      const candidate3 = 'ПАВЛИН';
+      const isBlocked3 = (room.hostWords || []).map(normalizeWord).includes(normalizeWord(candidate3));
+      expect(isBlocked3).toBe(false);
+    });
+
+    it('blocks asking words that were already asked in previous turns', () => {
+      const room: Partial<Room> = {
+        secretWord: 'ПАРОХОД',
+        revealedLettersCount: 2,
+        hostWords: [],
+        askedWords: ['пакет', 'пальто'],
+      };
+
+      const candidate1 = 'ПАКЕТ';
+      const isBlocked1 = (room.askedWords || []).map(normalizeWord).includes(normalizeWord(candidate1));
+      expect(isBlocked1).toBe(true);
+
+      const candidate2 = 'ПАПКА';
+      const isBlocked2 = (room.askedWords || []).map(normalizeWord).includes(normalizeWord(candidate2));
+      expect(isBlocked2).toBe(false);
+    });
+
+    it('blocks using already asked words or host words as contact guesses', () => {
+      const room: Partial<Room> = {
+        secretWord: 'ПАРОХОД',
+        revealedLettersCount: 2,
+        hostWords: ['парус'],
+        askedWords: ['пакет'],
+      };
+
+      const guessHostWord = 'ПАРУС';
+      const isHostBlocked = (room.hostWords || []).map(normalizeWord).includes(normalizeWord(guessHostWord));
+      expect(isHostBlocked).toBe(true);
+
+      const guessAskedWord = 'ПАКЕТ';
+      const isAskedBlocked = (room.askedWords || []).map(normalizeWord).includes(normalizeWord(guessAskedWord));
+      expect(isAskedBlocked).toBe(true);
+
+      const guessFreshWord = 'ПАЛАТКА';
+      const isFreshBlocked =
+        (room.hostWords || []).map(normalizeWord).includes(normalizeWord(guessFreshWord)) ||
+        (room.askedWords || []).map(normalizeWord).includes(normalizeWord(guessFreshWord));
+      expect(isFreshBlocked).toBe(false);
+    });
+
+    it('prevents host from deflecting with the exact same word twice', () => {
+      const hostWords = ['парус', 'парк'];
+      const newDeflectWord = 'Парус';
+
+      const isDuplicate = hostWords.map(normalizeWord).includes(normalizeWord(newDeflectWord));
+      expect(isDuplicate).toBe(true);
+
+      const freshDeflect = 'Паровоз';
+      const isFresh = hostWords.map(normalizeWord).includes(normalizeWord(freshDeflect));
+      expect(isFresh).toBe(false);
+    });
+  });
 });
+

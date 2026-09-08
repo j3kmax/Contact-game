@@ -38,6 +38,9 @@ class GameStorageService {
             if (!data.historyLog) data.historyLog = [];
             if (!data.submissions) data.submissions = {};
             if (!data.players) data.players = {};
+            if (!data.hostWords) data.hostWords = [];
+            if (!data.askedWords) data.askedWords = [];
+            if (!data.usedWords) data.usedWords = [];
             onUpdate(data);
           } else {
             onUpdate(null);

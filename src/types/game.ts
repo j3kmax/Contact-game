@@ -76,6 +76,9 @@ export interface Room {
   activePlayerId?: string | null;
   turnOrder?: string[];
   directGuessCooldowns?: Record<string, number>; // playerId -> expiry timestamp ms
+  hostWords?: string[]; // Words written/deflected by the host
+  askedWords?: string[]; // Words previously asked by players (intended words)
+  usedWords?: string[]; // Combined pool of used/eliminated words
   winner?: 'players' | 'host' | null;
   createdAt: number;
   updatedAt?: number;

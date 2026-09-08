@@ -434,6 +434,9 @@ export function useGameRoom(roomId: string | null) {
         contactData: null,
         submissions: {},
         directGuessCooldowns: {},
+        hostWords: [],
+        askedWords: [],
+        usedWords: [],
         leaderId: effectiveLeaderId,
         players: updatedPlayers,
         activePlayerId: initialActivePlayerId,
@@ -482,6 +485,22 @@ export function useGameRoom(roomId: string | null) {
         throw new Error(`Задуманное слово должно начинаться на открытые буквы: «${revealedPrefix.toUpperCase()}»`);
       }
 
+      if (normIntended === normalizeWord(room.secretWord)) {
+        throw new Error('Нельзя загадывать само тайное слово раунда!');
+      }
+
+      // Check 1: host words cannot be asked
+      const normHostWords = (room.hostWords || []).map(normalizeWord);
+      if (normHostWords.includes(normIntended)) {
+        throw new Error(`Слово «${cleanIntended}» уже называл ведущий! Его нельзя загадывать.`);
+      }
+
+      // Check 2: already asked words cannot be asked again
+      const normAskedWords = (room.askedWords || []).map(normalizeWord);
+      if (normAskedWords.includes(normIntended)) {
+        throw new Error(`Слово «${cleanIntended}» уже загадывалось ранее! Его нельзя загадывать повторно.`);
+      }
+
       const cleanText = (text && text.trim()) || 'Голосовой намёк в Discord';
 
       const updates: Partial<Room> = {
@@ -526,6 +545,12 @@ export function useGameRoom(roomId: string | null) {
     const { activePlayerId, turnOrder } = getNextTurn(room);
     const nextName = activePlayerId ? (room.players?.[activePlayerId]?.name || 'следующего игрока') : 'следующего игрока';
 
+    const intended = room.currentQuestion?.intendedWord ? normalizeWord(room.currentQuestion.intendedWord) : '';
+    const currentAsked = room.askedWords || [];
+    const newAsked = intended && !currentAsked.includes(intended) ? [...currentAsked, intended] : currentAsked;
+    const currentUsed = room.usedWords || [];
+    const newUsed = intended && !currentUsed.includes(intended) ? [...currentUsed, intended] : currentUsed;
+
     const updates: Partial<Room> = {
       currentQuestion: null,
       contactData: null,
@@ -534,6 +559,8 @@ export function useGameRoom(roomId: string | null) {
       status: 'QUESTION_PHASE',
       activePlayerId,
       turnOrder,
+      askedWords: newAsked,
+      usedWords: newUsed,
       historyLog: addLog(
         room.historyLog,
         `Вопрос был отменен. Очередь переходит к ${nextName}.`,
@@ -661,6 +688,18 @@ export function useGameRoom(roomId: string | null) {
         throw new Error(`Слово должно начинаться с открытых букв: «${revealedPrefix.toUpperCase()}»`);
       }
 
+      // Check 1: host words cannot be used as guesses
+      const normHostWords = (room.hostWords || []).map(normalizeWord);
+      if (normHostWords.includes(cleanWord)) {
+        throw new Error(`Слово «${partnerWord.trim().toUpperCase()}» уже называл ведущий! Его нельзя использовать как отгадку.`);
+      }
+
+      // Check 2: already asked words cannot be used as guesses
+      const normAskedWords = (room.askedWords || []).map(normalizeWord);
+      if (normAskedWords.includes(cleanWord)) {
+        throw new Error(`Слово «${partnerWord.trim().toUpperCase()}» уже загадывалось ранее! Его нельзя заново давать как отгадку.`);
+      }
+
       const timerExpiresAt = Date.now() + 10000; // 10 seconds
 
       const updates: Partial<Room> = {
@@ -705,6 +744,18 @@ export function useGameRoom(roomId: string | null) {
 
       if (!cleanWord.startsWith(revealedPrefix)) {
         throw new Error(`Слово должно начинаться с открытых букв: «${revealedPrefix.toUpperCase()}»`);
+      }
+
+      // Check 1: host words cannot be used as guesses
+      const normHostWords = (room.hostWords || []).map(normalizeWord);
+      if (normHostWords.includes(cleanWord)) {
+        throw new Error(`Слово «${word.trim().toUpperCase()}» уже называл ведущий! Его нельзя использовать как отгадку.`);
+      }
+
+      // Check 2: already asked words cannot be used as guesses
+      const normAskedWords = (room.askedWords || []).map(normalizeWord);
+      if (normAskedWords.includes(cleanWord)) {
+        throw new Error(`Слово «${word.trim().toUpperCase()}» уже загадывалось ранее! Его нельзя заново давать как отгадку.`);
       }
 
       const existingAdditional = room.contactData.additionalPartners || [];
@@ -759,9 +810,21 @@ export function useGameRoom(roomId: string | null) {
         };
       }
 
+      const normHostWords = (room.hostWords || []).map(normalizeWord);
+      if (normHostWords.includes(cleanDeflect)) {
+        return {
+          success: false,
+          matched: false,
+          error: `Вы уже называли слово «${deflectWord.trim().toUpperCase()}»!`,
+        };
+      }
+
       const intended = room.currentQuestion.intendedWord
         ? normalizeWord(room.currentQuestion.intendedWord)
         : '';
+
+      const newHostWords = [...(room.hostWords || []), cleanDeflect];
+      const newUsedWords = [...new Set([...(room.usedWords || []), cleanDeflect])];
 
       // Check if host guessed the intended word
       const isExactMatch = intended && cleanDeflect === intended;
@@ -774,6 +837,10 @@ export function useGameRoom(roomId: string | null) {
         const { activePlayerId, turnOrder } = getNextTurn(room);
         const nextName = activePlayerId ? (room.players?.[activePlayerId]?.name || 'следующего игрока') : 'следующего игрока';
 
+        const currentAsked = room.askedWords || [];
+        const newAsked = intended && !currentAsked.includes(intended) ? [...currentAsked, intended] : currentAsked;
+        if (intended) newUsedWords.push(intended);
+
         const updates: Partial<Room> = {
           status: 'QUESTION_PHASE',
           currentQuestion: null,
@@ -783,6 +850,9 @@ export function useGameRoom(roomId: string | null) {
           players: updatedPlayers,
           activePlayerId,
           turnOrder,
+          hostWords: newHostWords,
+          askedWords: newAsked,
+          usedWords: [...new Set(newUsedWords)],
           historyLog: addLog(
             room.historyLog,
             `🛡️ Ведущий отгадал задуманное слово: «Это не ${deflectWord.toUpperCase()}»! (+10 очков ведущему) Вопрос снят. Очередь переходит к ${nextName}.`,
@@ -800,6 +870,8 @@ export function useGameRoom(roomId: string | null) {
             word: deflectWord.toUpperCase(),
             timestamp: Date.now(),
           },
+          hostWords: newHostWords,
+          usedWords: [...new Set(newUsedWords)],
           historyLog: addLog(
             room.historyLog,
             `🤔 Ведущий предположил «${deflectWord.toUpperCase()}», но это не то! Время тикает!`,
@@ -826,7 +898,8 @@ export function useGameRoom(roomId: string | null) {
       throw new Error('Только автор вопроса может подтвердить отбитие');
     }
     const effectiveLeaderId = room.leaderId || room.hostId;
-    const deflectWord = room.lastDeflectAttempt?.word || 'слово ведущего';
+    const deflectWord = room.lastDeflectAttempt?.word ? normalizeWord(room.lastDeflectAttempt.word) : '';
+    const intended = room.currentQuestion?.intendedWord ? normalizeWord(room.currentQuestion.intendedWord) : '';
 
     const scoreDeltas: Record<string, number> = {};
     if (effectiveLeaderId) {
@@ -835,6 +908,14 @@ export function useGameRoom(roomId: string | null) {
     const updatedPlayers = awardPoints(room.players || {}, scoreDeltas);
     const { activePlayerId, turnOrder } = getNextTurn(room);
     const nextName = activePlayerId ? (room.players?.[activePlayerId]?.name || 'следующего игрока') : 'следующего игрока';
+
+    const currentHost = room.hostWords || [];
+    const newHost = deflectWord && !currentHost.includes(deflectWord) ? [...currentHost, deflectWord] : currentHost;
+
+    const currentAsked = room.askedWords || [];
+    const newAsked = intended && !currentAsked.includes(intended) ? [...currentAsked, intended] : currentAsked;
+
+    const newUsed = [...new Set([...(room.usedWords || []), ...(deflectWord ? [deflectWord] : []), ...(intended ? [intended] : [])])];
 
     const updates: Partial<Room> = {
       status: 'QUESTION_PHASE',
@@ -845,6 +926,9 @@ export function useGameRoom(roomId: string | null) {
       players: updatedPlayers,
       activePlayerId,
       turnOrder,
+      hostWords: newHost,
+      askedWords: newAsked,
+      usedWords: newUsed,
       historyLog: addLog(
         room.historyLog,
         `🤝 Автор вопроса подтвердил, что «${deflectWord}» подходит! (+10 очков ведущему) Вопрос снят. Очередь переходит к ${nextName}.`,
@@ -887,6 +971,10 @@ export function useGameRoom(roomId: string | null) {
     ];
 
     const normAuthor = normalizeWord(authorWord);
+    const currentAsked = room.askedWords || [];
+    const newAsked = normAuthor && !currentAsked.includes(normAuthor) ? [...currentAsked, normAuthor] : currentAsked;
+    const newUsed = [...new Set([...(room.usedWords || []), ...(normAuthor ? [normAuthor] : [])])];
+
     let allMatch = true;
     const detailsList: string[] = [];
 
@@ -936,6 +1024,8 @@ export function useGameRoom(roomId: string | null) {
         players: updatedPlayers,
         activePlayerId,
         turnOrder,
+        askedWords: newAsked,
+        usedWords: newUsed,
         historyLog: addLog(room.historyLog, logMsg, 'match'),
       };
 
@@ -961,6 +1051,8 @@ export function useGameRoom(roomId: string | null) {
         lastDeflectAttempt: null,
         activePlayerId,
         turnOrder,
+        askedWords: newAsked,
+        usedWords: newUsed,
         historyLog: addLog(room.historyLog, failMsg, 'mismatch'),
       };
 
@@ -1078,6 +1170,9 @@ export function useGameRoom(roomId: string | null) {
       submissions: {},
       lastDeflectAttempt: null,
       directGuessCooldowns: {},
+      hostWords: [],
+      askedWords: [],
+      usedWords: [],
       activePlayerId: playerIds[0] || null,
       turnOrder: playerIds,
       winner: null,
